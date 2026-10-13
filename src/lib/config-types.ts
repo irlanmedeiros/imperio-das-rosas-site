@@ -48,8 +48,8 @@ export type Ocasiao = z.infer<typeof ocasiaoSchema>;
 
 export const LOJA_PADRAO: Loja = {
   nome: "Império das Rosas",
-  whatsapp: "5583999999999",
-  telefoneExibicao: "(83) 99999-9999",
+  whatsapp: "5583996571070",
+  telefoneExibicao: "(83) 99657-1070",
   instagram: "imperiodasrosaspb",
   endereco: "João Pessoa – PB",
   cidade: "João Pessoa",

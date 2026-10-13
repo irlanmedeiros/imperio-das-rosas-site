@@ -7,7 +7,7 @@ import { CONTEUDO_PADRAO, LOJA_PADRAO, conteudoSchema, lojaSchema, type Conteudo
 /** Tag única das páginas públicas: qualquer alteração no admin chama updateTag(TAG_LOJA). */
 export const TAG_LOJA = "loja";
 /** Mude ao alterar os textos padrão ou o formato dos dados: o cache da Vercel sobrevive entre deploys. */
-const VERSAO_CACHE = "2026-10-13b";
+const VERSAO_CACHE = "2026-10-13c";
 
 export type ProdutoPublico = {
   id: number;
