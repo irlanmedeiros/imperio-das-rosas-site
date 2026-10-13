@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [new URL("https://*.public.blob.vercel-storage.com/**")],
     formats: ["image/avif", "image/webp"],
+    qualities: [75, 85], // 85 só na foto principal do topo
   },
   experimental: {
     // Upload de fotos no admin: o navegador já reduz a imagem antes de enviar (limite da Vercel é 4,5 MB)
