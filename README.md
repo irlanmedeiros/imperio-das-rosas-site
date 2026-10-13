@@ -98,3 +98,9 @@ O projeto está ligado à Vercel (`irlanmedeiros-projects/imperio-das-rosas`). C
 Manual: `vercel deploy --prod`.
 
 Variáveis de ambiente necessárias: ver `.env.example`.
+
+> ⚠️ **Os previews (PRs) usam o mesmo banco de produção** (a integração do Neon foi ligada a todos os ambientes). Pedidos, produtos e textos alterados num preview afetam o site real. Antes de testar mudanças de dados, crie uma *branch* no Neon e aponte o `DATABASE_URL` do ambiente Preview para ela.
+
+## Performance (13/10/2026)
+
+Lighthouse em produção (celular): acessibilidade, boas práticas e SEO **100** nas páginas principais; CLS **0**. Medição real com CPU 4x mais lenta e 4G: FCP ~1,1 s e LCP ~1,5 s na home. Home, produtos e checkout são servidos estáticos pela CDN (`x-vercel-cache: HIT`).
