@@ -75,8 +75,8 @@ export const CONTEUDO_PADRAO: Conteudo = {
     imagem: "/img/sobre.jpg",
   },
   banner: {
-    titulo: "Entregamos beleza e",
-    tituloDestaque: "carinho",
+    titulo: "Entregamos beleza",
+    tituloDestaque: "e carinho",
     texto: "Monte seu pedido no site e finalize pelo WhatsApp. A gente cuida do resto, do cartão à entrega.",
     imagem: "/img/banner-entrega.jpg",
   },

@@ -2,11 +2,12 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, Menu, ShoppingBag, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCarrinho } from "@/components/carrinho";
-import { Flor, WhatsAppIcone } from "@/components/icones";
+import { WhatsAppIcone } from "@/components/icones";
 import { linkWhatsApp } from "@/lib/whatsapp";
 
 const LINKS = [
@@ -17,14 +18,11 @@ const LINKS = [
   { href: "/#contato", rotulo: "Contato" },
 ];
 
-export function Marca() {
+/** Logo oficial. `clara` = versão com letras creme, para fundos verde-escuros. */
+export function Marca({ clara = false, className = "" }: { clara?: boolean; className?: string }) {
   return (
-    <Link href="/" className="marca" aria-label="Império das Rosas — início">
-      <Flor />
-      <span>
-        <span className="marca-nome">Império das Rosas</span>
-        <span className="marca-tag">Floricultura</span>
-      </span>
+    <Link href="/" className={`marca ${className}`} aria-label="Império das Rosas — início">
+      <Image src={clara ? "/img/logo-clara.png" : "/img/logo.png"} alt="Império das Rosas" width={1000} height={508} priority={!clara} sizes="240px" />
     </Link>
   );
 }

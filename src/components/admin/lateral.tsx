@@ -1,11 +1,11 @@
 "use client";
 
 import { ClipboardList, ExternalLink, FileText, LayoutDashboard, LogOut, Menu, Package, Settings, Tags, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { sair } from "@/app/admin/login/actions";
-import { Flor } from "@/components/icones";
 
 const ITENS = [
   { href: "/admin", rotulo: "Visão geral", icone: LayoutDashboard },
@@ -32,9 +32,8 @@ export function LateralAdmin({ pedidosNovos }: { pedidosNovos: number }) {
       </div>
       <aside className={`adm-lateral${aberta ? " aberta" : ""}`}>
         <div className="adm-marca">
-          <Flor />
           <div>
-            <strong>Império</strong>
+            <Image src="/img/logo-clara.png" alt="Império das Rosas" width={1000} height={508} sizes="160px" />
             <small>Painel da loja</small>
           </div>
           <button className="adm-fechar" onClick={() => setAberta(false)} aria-label="Fechar menu" style={{ marginLeft: "auto", color: "var(--on-dark)" }}>

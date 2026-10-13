@@ -18,7 +18,6 @@ export const metadata: Metadata = {
     siteName: "Império das Rosas",
     images: [{ url: "/img/hero.jpg", width: 1672, height: 941 }],
   },
-  icons: { icon: "/icon.svg" },
 };
 
 export const viewport: Viewport = { themeColor: "#2c3826" };

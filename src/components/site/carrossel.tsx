@@ -13,7 +13,19 @@ const VELOCIDADE = 38; // px por segundo na esteira automática
  * Esteira contínua: os produtos passam sozinhos em loop infinito, desaceleram ao passar o mouse,
  * aceitam arrastar (dedo/mouse) e têm setas laterais para avançar um card por vez.
  */
-export function Carrossel({ titulo, verTudo, produtos }: { titulo: string; verTudo?: string; produtos: ProdutoPublico[] }) {
+export function Carrossel({
+  titulo,
+  verTudo,
+  produtos,
+  sentido = "esquerda",
+}: {
+  titulo: string;
+  verTudo?: string;
+  produtos: ProdutoPublico[];
+  /** para onde a esteira anda sozinha */
+  sentido?: "esquerda" | "direita";
+}) {
+  const direcao = sentido === "direita" ? -1 : 1;
   const reduzir = useReducedMotion();
   const janela = useRef<HTMLDivElement>(null);
   const trilha = useRef<HTMLDivElement>(null);
@@ -48,7 +60,7 @@ export function Carrossel({ titulo, verTudo, produtos }: { titulo: string; verTu
     if (!larguraLoop) return;
     fator.current += (alvo.current - fator.current) * Math.min(1, delta / 260);
     if (!reduzir && visivel.current && fator.current > 0.002) {
-      x.set(embrulhar(x.get() - (VELOCIDADE * fator.current * delta) / 1000));
+      x.set(embrulhar(x.get() - (direcao * VELOCIDADE * fator.current * delta) / 1000));
     }
   });
 

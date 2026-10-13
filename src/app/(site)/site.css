@@ -587,7 +587,7 @@
 
 /* ================= Carrossel (esteira contínua) ================= */
 .carrossel + .carrossel {
-  margin-top: 56px;
+  margin-top: 72px;
 }
 .carrossel-topo {
   display: flex;
@@ -1099,10 +1099,6 @@
   display: grid;
   grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
   gap: 40px;
-}
-.rodape .marca svg,
-.rodape .marca-nome {
-  color: var(--white);
 }
 .rodape p {
   font-size: 14px;
@@ -1621,9 +1617,6 @@
     font-size: 11.5px;
     letter-spacing: 1.2px;
   }
-  .marca-nome {
-    font-size: 18px;
-  }
   .cats-grid {
     gap: 12px;
   }
@@ -1649,16 +1642,8 @@
   .menu-btn {
     display: grid;
   }
-  .marca svg {
-    width: 32px;
-    height: 32px;
-  }
-  .marca-nome {
-    font-size: 17px;
-  }
-  .marca-tag {
-    font-size: 8px;
-    letter-spacing: 4px;
+  .marca img {
+    height: 46px;
   }
   .topbar-redes,
   .topbar .horario {

@@ -100,38 +100,25 @@ textarea {
   white-space: nowrap;
 }
 
-/* ---------- Marca ---------- */
+/* ---------- Marca (logo) ---------- */
 .marca {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  display: block;
   flex-shrink: 0;
+  transition: opacity 0.3s;
 }
-.marca svg {
-  width: 38px;
-  height: 38px;
-  color: var(--forest);
-  transition: transform 0.8s var(--ease);
+.marca:hover {
+  opacity: 0.85;
 }
-.marca:hover svg {
-  transform: rotate(72deg);
-}
-.marca-nome {
+.marca img {
   display: block;
-  font-family: var(--font-title), serif;
-  font-size: 21px;
-  font-weight: 600;
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
-  color: var(--forest);
-  line-height: 1.05;
+  height: 58px;
+  width: auto;
 }
-.marca-tag {
-  display: block;
-  font-size: 9px;
-  letter-spacing: 5px;
-  text-transform: uppercase;
-  color: var(--wood);
+.marca-rodape img {
+  height: 92px;
+}
+.marca-login img {
+  height: 84px;
 }
 
 @keyframes girar {

@@ -92,7 +92,7 @@ export default async function Home() {
             <Carrossel titulo={categorias[0]?.nome ?? "Destaques"} verTudo={`/catalogo?categoria=${principal}`} produtos={destaques} />
           </Revelar>
           <Revelar>
-            <Carrossel titulo="Combos e box para presentear" verTudo="/catalogo" produtos={presentes} />
+            <Carrossel titulo="Combos e box para presentear" verTudo="/catalogo" produtos={presentes} sentido="direita" />
           </Revelar>
           <Revelar className="secao-acao">
             <Link href="/catalogo" className="btn btn-primary">
@@ -162,7 +162,9 @@ export default async function Home() {
         <Revelar className="container banner-conteudo">
           <span className="ornamento">Com carinho, até você</span>
           <h2>
-            {conteudo.banner.titulo} <em>{conteudo.banner.tituloDestaque}</em>
+            {conteudo.banner.titulo}
+            <br />
+            <em>{conteudo.banner.tituloDestaque}</em>
           </h2>
           <p>{conteudo.banner.texto}</p>
           <a className="btn btn-light" href={linkWhatsApp(loja.whatsapp, "Olá! Quero fazer um pedido 🌹")} target="_blank" rel="noopener">

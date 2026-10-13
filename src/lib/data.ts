@@ -6,6 +6,8 @@ import { CONTEUDO_PADRAO, LOJA_PADRAO, conteudoSchema, lojaSchema, type Conteudo
 
 /** Tag única das páginas públicas: qualquer alteração no admin chama updateTag(TAG_LOJA). */
 export const TAG_LOJA = "loja";
+/** Mude ao alterar os textos padrão ou o formato dos dados: o cache da Vercel sobrevive entre deploys. */
+const VERSAO_CACHE = "2026-10-13b";
 
 export type ProdutoPublico = {
   id: number;
@@ -31,8 +33,8 @@ export async function lerConfig<T>(chave: "loja" | "conteudo"): Promise<T> {
   return (r.success ? r.data : CONTEUDO_PADRAO) as T;
 }
 
-export const getLoja = unstable_cache(() => lerConfig<Loja>("loja"), ["loja"], { tags: [TAG_LOJA] });
-export const getConteudo = unstable_cache(() => lerConfig<Conteudo>("conteudo"), ["conteudo"], { tags: [TAG_LOJA] });
+export const getLoja = unstable_cache(() => lerConfig<Loja>("loja"), ["loja", VERSAO_CACHE], { tags: [TAG_LOJA] });
+export const getConteudo = unstable_cache(() => lerConfig<Conteudo>("conteudo"), ["conteudo", VERSAO_CACHE], { tags: [TAG_LOJA] });
 
 export const getCatalogo = unstable_cache(
   async () => {
@@ -66,7 +68,7 @@ export const getCatalogo = unstable_cache(
       .filter((c) => c.total > 0);
     return { produtos, categorias };
   },
-  ["catalogo"],
+  ["catalogo", VERSAO_CACHE],
   { tags: [TAG_LOJA] },
 );
 

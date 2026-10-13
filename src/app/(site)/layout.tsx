@@ -50,7 +50,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           <div className="container">
             <div className="rodape-grid">
               <div>
-                <Marca />
+                <Marca clara className="marca-rodape" />
                 <p>Flores frescas, arranjos feitos à mão e presentes que emocionam. Entrega no mesmo dia em {loja.cidade}.</p>
               </div>
               <div>

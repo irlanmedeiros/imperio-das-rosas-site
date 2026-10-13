@@ -18,7 +18,7 @@ export function FormLogin({ de }: { de: string }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
     >
-      <Marca />
+      <Marca className="marca-login" />
       <h1>Painel da loja</h1>
       <p>Entre para gerenciar produtos, pedidos e o conteúdo do site.</p>
       <input type="hidden" name="de" value={de} />

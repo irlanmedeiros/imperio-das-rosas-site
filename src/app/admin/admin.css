@@ -17,23 +17,18 @@
 }
 .adm-marca {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
-  padding: 4px 10px 22px;
+  padding: 6px 10px 24px;
   color: var(--white);
 }
-.adm-marca svg {
-  width: 30px;
-  height: 30px;
-}
-.adm-marca strong {
-  display: block;
-  font-family: var(--font-title), serif;
-  font-size: 16px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+.adm-marca img {
+  width: 150px;
+  height: auto;
 }
 .adm-marca small {
+  display: block;
+  margin-top: 6px;
   font-size: 10px;
   letter-spacing: 3px;
   text-transform: uppercase;

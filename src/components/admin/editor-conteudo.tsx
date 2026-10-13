@@ -73,8 +73,8 @@ export function EditorConteudo({ inicial }: { inicial: Conteudo }) {
         <p>Faixa escura com foto de fundo, no meio da página.</p>
         <div className="form-produto">
           <div className="form-grade">
-            <Campo rotulo="Título" valor={c.banner.titulo} onChange={(v) => set("banner", "titulo", v)} />
-            <Campo rotulo="Palavra em destaque" valor={c.banner.tituloDestaque} onChange={(v) => set("banner", "tituloDestaque", v)} />
+            <Campo rotulo="Título (1ª linha)" valor={c.banner.titulo} onChange={(v) => set("banner", "titulo", v)} />
+            <Campo rotulo="2ª linha (em itálico)" valor={c.banner.tituloDestaque} onChange={(v) => set("banner", "tituloDestaque", v)} />
             <div className="inteiro">
               <Campo rotulo="Texto" valor={c.banner.texto} onChange={(v) => set("banner", "texto", v)} />
             </div>
