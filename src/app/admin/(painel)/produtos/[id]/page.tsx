@@ -1,3 +1,4 @@
+import { exigirAdmin } from "@/lib/auth";
 import { asc, eq } from "drizzle-orm";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -8,6 +9,7 @@ import { FormProduto } from "@/components/admin/form-produto";
 export const metadata = { title: "Produto" };
 
 export default async function EditarProduto({ params }: { params: Promise<{ id: string }> }) {
+  await exigirAdmin();
   const { id } = await params;
   const novo = id === "novo";
   if (!novo && !/^\d+$/.test(id)) notFound();

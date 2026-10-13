@@ -2,7 +2,7 @@
 
 import { put } from "@vercel/blob";
 import { and, eq, min, ne } from "drizzle-orm";
-import { updateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import sharp from "sharp";
 import { z } from "zod";
 import { db, schema } from "@/db";
@@ -14,8 +14,10 @@ import { slugify } from "@/lib/format";
 
 export type Resultado = { ok: true; id?: number; mensagem?: string } | { ok: false; erro: string };
 
+/** Dados em cache + HTML estático de todas as páginas públicas são refeitos na próxima visita. */
 function atualizarSite() {
   updateTag(TAG_LOJA);
+  revalidatePath("/", "layout");
 }
 
 /* ---------------- Imagens ---------------- */

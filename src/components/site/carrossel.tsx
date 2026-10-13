@@ -87,7 +87,7 @@ export function Carrossel({
   return (
     <div className="carrossel">
       <div className="carrossel-topo">
-        <h3>{titulo}</h3>
+        <h2>{titulo}</h2>
         {verTudo && <Link href={verTudo}>Ver tudo →</Link>}
       </div>
       <div className="carrossel-area" onMouseEnter={() => pausar()} onMouseLeave={() => (alvo.current = 1)}>
@@ -122,7 +122,7 @@ export function Carrossel({
           >
             {itens.map(({ p, chave }, i) => (
               <div className="esteira-item" key={chave} aria-hidden={i >= produtos.length || undefined} inert={i >= produtos.length || undefined}>
-                <ProdutoCard p={p} />
+                <ProdutoCard p={p} sizes="(max-width: 600px) 66vw, (max-width: 1000px) 33vw, 300px" />
               </div>
             ))}
           </motion.div>

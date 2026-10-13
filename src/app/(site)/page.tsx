@@ -9,7 +9,8 @@ import { FotoFlutuante, FundoParallax } from "@/components/site/parallax";
 import { getCatalogo, getConteudo, getLoja } from "@/lib/data";
 import { linkWhatsApp } from "@/lib/whatsapp";
 
-export const dynamic = "force-dynamic";
+// Estática: refeita quando o admin salva algo (ver atualizarSite) ou, por garantia, 1x por dia
+export const revalidate = 86400;
 
 const BENEFICIOS = [
   { icone: Flor, titulo: "Flores frescas", texto: "Selecionadas todos os dias" },
@@ -39,7 +40,7 @@ export default async function Home() {
             <RevelarItem key={b.titulo} className="beneficio">
               <b.icone />
               <div>
-                <h3>{b.titulo}</h3>
+                <h2>{b.titulo}</h2>
                 <p>{b.texto}</p>
               </div>
             </RevelarItem>

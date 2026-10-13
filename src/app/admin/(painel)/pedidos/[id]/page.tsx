@@ -1,3 +1,4 @@
+import { exigirAdmin } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
@@ -15,6 +16,7 @@ export const metadata = { title: "Pedido" };
 const quando = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Recife", dateStyle: "short", timeStyle: "short" });
 
 export default async function PedidoAdmin({ params }: { params: Promise<{ id: string }> }) {
+  await exigirAdmin();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const [p] = await db.select().from(schema.pedidos).where(eq(schema.pedidos.id, id));

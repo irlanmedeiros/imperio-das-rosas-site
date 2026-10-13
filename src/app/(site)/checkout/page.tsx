@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { FormCheckout } from "@/components/site/form-checkout";
 import { getLoja } from "@/lib/data";
 
-export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Finalizar pedido", robots: { index: false } };
 
 export default async function CheckoutPage() {

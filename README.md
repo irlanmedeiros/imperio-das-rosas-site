@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Império das Rosas — site e painel
 
-## Getting Started
+Loja da floricultura **Império das Rosas** (João Pessoa/PB): catálogo, carrinho e finalização do pedido pelo WhatsApp, mais um painel administrativo para a loja gerenciar tudo.
 
-First, run the development server:
+- Produção: https://imperio-das-rosas.vercel.app
+- Painel: `/admin` (login único da loja, credenciais com o responsável pelo projeto)
+
+## Stack
+
+| Parte | Tecnologia |
+|---|---|
+| Framework | **Next.js 16** (App Router, Turbopack, Server Actions) + React 19 + TypeScript |
+| Banco | **Postgres (Neon)** via **Drizzle ORM** (`src/db/schema.ts`) |
+| Fotos | **Vercel Blob** (upload pelo admin, redimensionado com `sharp`) |
+| Animações | **Motion** (`motion/react`) — respeita `prefers-reduced-motion` |
+| Auth admin | Cookie `httpOnly` com JWT (`jose`) + senha com `bcrypt` |
+| Estilo | CSS puro com variáveis (`globals.css`, `(site)/site.css`, `admin/admin.css`) |
+| Hospedagem | Vercel |
+
+> ⚠️ Next.js 16 mudou várias APIs (ex.: `middleware` → `proxy`, `params`/`searchParams` são Promises, `revalidateTag` exige perfil). Consulte `node_modules/next/dist/docs/` antes de usar uma API de memória — ver `AGENTS.md`.
+
+## Rodando localmente
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local      # ou: vercel env pull .env.local
+npm run db:push                 # cria as tabelas no banco do .env.local
+npm run db:seed                 # carrega o catálogo de data/catalogo-inicial.json
+npm run dev                     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Use um banco de **desenvolvimento** (ex.: uma branch do Neon), não o de produção.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> No `.env.local`, os `$` do `ADMIN_PASSWORD_HASH` precisam ser escapados (`\$`), senão o Next lê o hash vazio e o login falha. Na Vercel o valor vai sem escape.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Scripts
 
-## Learn More
+| Comando | O que faz |
+|---|---|
+| `npm run dev` / `build` / `start` | desenvolvimento / build / servidor de produção |
+| `npm run lint` · `npm run typecheck` | ESLint · TypeScript |
+| `npm run db:push` | aplica `src/db/schema.ts` no banco |
+| `npm run db:studio` | interface web do banco (Drizzle Studio) |
+| `npm run db:seed` | popula categorias e produtos (idempotente) |
+| `npm run admin:senha -- "senha"` | gera o hash para `ADMIN_PASSWORD_HASH` |
 
-To learn more about Next.js, take a look at the following resources:
+## Estrutura
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+  app/
+    (site)/            páginas públicas (layout com cabeçalho, rodapé, carrinho)
+      page.tsx           home
+      catalogo/          catálogo com filtros e busca
+      produto/[slug]/    página do produto (estática, gerada no build)
+      checkout/          formulário + Server Action criarPedido (preço recalculado no servidor)
+      pedido/[codigo]/   confirmação + botão que abre o WhatsApp com o pedido
+    admin/
+      login/             tela de login (Server Actions entrar/sair)
+      (painel)/          visão geral, pedidos, produtos, categorias, conteúdo, configurações
+      actions.ts         todas as mutações do admin (cada uma chama exigirAdmin)
+    sitemap.ts · robots.ts · icon.png
+  components/
+    site/              cabeçalho, carrossel (esteira contínua), catálogo, checkout, cards…
+    admin/             tabelas, formulários, upload de imagem, editores
+    carrinho.tsx       store do carrinho (localStorage + useSyncExternalStore)
+    revelar.tsx        animações de entrada no scroll
+  db/                  schema e cliente Drizzle
+  lib/
+    data.ts            leituras públicas com cache (unstable_cache, tag "loja")
+    config-types.ts    schema + padrões de "Configurações" e "Conteúdo" (JSON na tabela configuracoes)
+    auth.ts · session.ts   sessão do admin
+    whatsapp.ts        links wa.me e mensagem do pedido
+  proxy.ts             barra /admin sem sessão (checagem otimista; páginas e ações revalidam)
+scripts/               seed e gerador de senha
+data/                  catálogo inicial exportado do banco
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Como os dados fluem
 
-## Deploy on Vercel
+- **Páginas públicas são estáticas** (CDN). Os dados vêm de `src/lib/data.ts`, cacheados com a tag `loja`.
+- Toda alteração no admin chama `atualizarSite()` (`src/app/admin/actions.ts`): `updateTag("loja")` + `revalidatePath("/", "layout")`. O site reflete a mudança na próxima visita.
+- Mudou os **textos padrão** em `config-types.ts` ou o formato dos dados? Altere `VERSAO_CACHE` em `data.ts` — o cache da Vercel sobrevive entre deploys.
+- **Pedido**: carrinho (navegador) → `criarPedido` valida com zod, busca preços no banco, grava em `pedidos` → página `/pedido/IR-XXXXXX` monta a mensagem e abre o WhatsApp da loja. Não há pagamento online; é combinado no WhatsApp.
+- **Configurações e conteúdo** (WhatsApp, horário, textos, banners, ocasiões, depoimentos) ficam em `configuracoes` como JSON validado por zod, com os padrões de `config-types.ts`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Segurança
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `/admin` protegido em três camadas: `proxy.ts`, `exigirAdmin()` em cada página do painel e em cada Server Action.
+- Preços nunca vêm do navegador; checkout tem limites de tamanho e honeypot anti-spam.
+- Upload aceita só imagens, reduzidas no navegador e de novo no servidor (máx. 1600px, JPEG).
+- Cabeçalhos de segurança em `next.config.ts`.
+
+## Deploy
+
+O projeto está ligado à Vercel (`irlanmedeiros-projects/imperio-das-rosas`). Com o repositório conectado, cada push na `main` publica em produção e cada PR gera um preview.
+
+Manual: `vercel deploy --prod`.
+
+Variáveis de ambiente necessárias: ver `.env.example`.

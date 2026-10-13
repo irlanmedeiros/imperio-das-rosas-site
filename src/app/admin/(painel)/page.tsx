@@ -1,3 +1,4 @@
+import { exigirAdmin } from "@/lib/auth";
 import { and, count, desc, eq, gte, ne, sum } from "drizzle-orm";
 import { ArrowRight, Plus } from "lucide-react";
 import Link from "next/link";
@@ -13,6 +14,7 @@ function inicioDoMes() {
 }
 
 export default async function Dashboard() {
+  await exigirAdmin();
   const desdeMes = inicioDoMes();
   const [[{ novos }], [{ mes, faturado }], [{ ativos }], recentes] = await Promise.all([
     db.select({ novos: count() }).from(schema.pedidos).where(eq(schema.pedidos.status, "novo")),

@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx scripts/seed.ts",
+    "admin:senha": "tsx scripts/gerar-senha-admin.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",
@@ -34,5 +39,8 @@
     "eslint-config-next": "16.4.0",
     "tsx": "^4.23.15",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20.9"
   }
 }

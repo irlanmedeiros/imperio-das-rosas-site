@@ -115,6 +115,7 @@ export function Catalogo({
         </div>
       ) : (
         <motion.div layout className="grade">
+          <h2 className="sr-only">Produtos</h2>
           <AnimatePresence mode="popLayout" initial={false}>
             {lista.slice(0, limite).map((p, i) => (
               <motion.div

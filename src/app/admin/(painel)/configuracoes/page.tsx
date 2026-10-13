@@ -1,3 +1,4 @@
+import { exigirAdmin } from "@/lib/auth";
 import { EditorLoja } from "@/components/admin/editor-loja";
 import type { Loja } from "@/lib/config-types";
 import { lerConfig } from "@/lib/data";
@@ -5,6 +6,7 @@ import { lerConfig } from "@/lib/data";
 export const metadata = { title: "Configurações" };
 
 export default async function ConfiguracoesPage() {
+  await exigirAdmin();
   const loja = await lerConfig<Loja>("loja");
   return (
     <>

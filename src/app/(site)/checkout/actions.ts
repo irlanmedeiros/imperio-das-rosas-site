@@ -8,7 +8,7 @@ import { soDigitos } from "@/lib/format";
 
 const entrada = z
   .object({
-    itens: z.array(z.object({ id: z.number().int().positive(), qtd: z.number().int().min(1).max(99) })).min(1, "Carrinho vazio"),
+    itens: z.array(z.object({ id: z.number().int().positive(), qtd: z.number().int().min(1).max(99) })).min(1, "Carrinho vazio").max(40, "Carrinho grande demais"),
     clienteNome: z.string().trim().min(2, "Informe seu nome").max(80),
     clienteTelefone: z.string().refine((v) => soDigitos(v).length >= 10, "Telefone com DDD"),
     tipoEntrega: z.enum(["entrega", "retirada"]),

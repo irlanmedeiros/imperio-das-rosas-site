@@ -1,3 +1,4 @@
+import { exigirAdmin } from "@/lib/auth";
 import { asc, count } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { EditorCategorias } from "@/components/admin/editor-categorias";
@@ -5,6 +6,7 @@ import { EditorCategorias } from "@/components/admin/editor-categorias";
 export const metadata = { title: "Categorias" };
 
 export default async function CategoriasPage() {
+  await exigirAdmin();
   const [categorias, contagem] = await Promise.all([
     db.select().from(schema.categorias).orderBy(asc(schema.categorias.ordem)),
     db.select({ id: schema.produtos.categoriaId, n: count() }).from(schema.produtos).groupBy(schema.produtos.categoriaId),

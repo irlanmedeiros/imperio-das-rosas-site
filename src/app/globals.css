@@ -5,11 +5,11 @@
   --cream: #f7f4ec;
   --parchment: #eae3d1;
   --wood-dark: #4a3826;
-  --wood: #9c7a54;
+  --wood: #86653f; /* contraste 4,8:1 no creme (AA) */
   --sage: #a9b8a4;
   --sage-light: #dde3d6;
   --ink: #3a4436;
-  --muted: #75806f;
+  --muted: #5f6a59; /* contraste 5,2:1 no creme (AA) */
   --line: #e4ddca;
   --white: #ffffff;
   --on-dark: #d8decf;
@@ -80,10 +80,6 @@ textarea {
   background: var(--sage-light);
 }
 
-.serif {
-  font-family: var(--font-title), Georgia, serif;
-}
-
 .container {
   width: 100%;
   max-width: 1240px;
@@ -98,6 +94,24 @@ textarea {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* ---------- Títulos de seção ---------- */
+.titulo {
+  font-family: var(--font-title), serif;
+  font-size: clamp(32px, 4.6vw, 50px);
+  font-weight: 500;
+  line-height: 1.12;
+  color: var(--forest);
+}
+.titulo em {
+  font-style: italic;
+  color: var(--olive);
+}
+.subtitulo {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 16px;
 }
 
 /* ---------- Marca (logo) ---------- */
@@ -176,12 +190,12 @@ textarea {
   background: var(--white);
 }
 .btn-whats {
-  background: #1f9d55;
+  background: #167a45;
   color: var(--white);
   box-shadow: 0 8px 22px rgba(31, 157, 85, 0.25);
 }
 .btn-whats:hover {
-  background: #17854a;
+  background: #11633a;
 }
 .btn-block {
   width: 100%;

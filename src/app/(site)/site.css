@@ -23,7 +23,13 @@
 }
 .topbar-redes {
   display: flex;
-  gap: 14px;
+  gap: 4px;
+}
+.topbar-redes a {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
 }
 .topbar-redes a:hover {
   color: var(--white);
@@ -332,7 +338,7 @@
   color: var(--sage);
   flex-shrink: 0;
 }
-.beneficio h3 {
+.beneficio h2 {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 1.5px;
@@ -418,22 +424,6 @@
 }
 .secao-topo.esquerda .ornamento::before {
   display: none;
-}
-.titulo {
-  font-family: var(--font-title), serif;
-  font-size: clamp(32px, 4.6vw, 50px);
-  font-weight: 500;
-  line-height: 1.12;
-  color: var(--forest);
-}
-.titulo em {
-  font-style: italic;
-  color: var(--olive);
-}
-.subtitulo {
-  margin-top: 12px;
-  color: var(--muted);
-  font-size: 16px;
 }
 .secao-acao {
   display: flex;
@@ -596,7 +586,7 @@
   gap: 16px;
   margin-bottom: 18px;
 }
-.carrossel-topo h3 {
+.carrossel-topo h2 {
   font-family: var(--font-title), serif;
   font-size: 24px;
   font-weight: 500;
@@ -1105,7 +1095,7 @@
   margin-top: 16px;
   max-width: 300px;
 }
-.rodape h4 {
+.rodape h2 {
   color: var(--white);
   font-size: 12px;
   font-weight: 700;

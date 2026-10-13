@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getCatalogo } from "@/lib/data";
 
+export const revalidate = 86400;
+
 const URL_SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://imperio-das-rosas.vercel.app";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

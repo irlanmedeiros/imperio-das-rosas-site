@@ -22,7 +22,7 @@ const LINKS = [
 export function Marca({ clara = false, className = "" }: { clara?: boolean; className?: string }) {
   return (
     <Link href="/" className={`marca ${className}`} aria-label="Império das Rosas — início">
-      <Image src={clara ? "/img/logo-clara.png" : "/img/logo.png"} alt="Império das Rosas" width={1000} height={508} priority={!clara} sizes="240px" />
+      <Image src={clara ? "/img/logo-clara.png" : "/img/logo.png"} alt="Império das Rosas" width={1000} height={508} loading={clara ? "lazy" : "eager"} sizes={clara ? "190px" : "(max-width: 900px) 92px, 116px"} />
     </Link>
   );
 }
@@ -40,7 +40,6 @@ export function Cabecalho({ whatsapp }: { whatsapp: string }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => setMenu(false), [pathname]);
   useEffect(() => {
     document.documentElement.style.overflow = menu ? "hidden" : "";
   }, [menu]);

@@ -1,9 +1,59 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 export type ItemCarrinho = { id: number; slug: string; nome: string; preco: number; foto: string | null; qtd: number };
 type NovoItem = Omit<ItemCarrinho, "qtd">;
+
+/* ---------- Store do carrinho no localStorage (sincroniza entre abas) ---------- */
+
+const CHAVE = "imperio-carrinho-v1";
+const VAZIO: ItemCarrinho[] = [];
+const ouvintes = new Set<() => void>();
+let cacheBruto: string | null = null;
+let cacheItens: ItemCarrinho[] = VAZIO;
+
+function ler(): ItemCarrinho[] {
+  let bruto: string | null = null;
+  try {
+    bruto = localStorage.getItem(CHAVE);
+  } catch {}
+  if (bruto !== cacheBruto) {
+    cacheBruto = bruto;
+    try {
+      cacheItens = bruto ? (JSON.parse(bruto) as ItemCarrinho[]) : VAZIO;
+    } catch {
+      cacheItens = VAZIO;
+    }
+  }
+  return cacheItens;
+}
+
+function gravar(itens: ItemCarrinho[]) {
+  try {
+    localStorage.setItem(CHAVE, JSON.stringify(itens));
+  } catch {}
+  ouvintes.forEach((o) => o());
+}
+
+function assinar(ouvinte: () => void) {
+  ouvintes.add(ouvinte);
+  const outraAba = (e: StorageEvent) => e.key === CHAVE && ouvinte();
+  window.addEventListener("storage", outraAba);
+  return () => {
+    ouvintes.delete(ouvinte);
+    window.removeEventListener("storage", outraAba);
+  };
+}
+
+const semAssinatura = () => () => {};
+
+/** true só no navegador, depois da hidratação (evita divergência com o HTML do servidor). */
+export function useHidratado() {
+  return useSyncExternalStore(semAssinatura, () => true, () => false);
+}
+
+/* ---------- Contexto ---------- */
 
 type Ctx = {
   itens: ItemCarrinho[];
@@ -21,29 +71,12 @@ type Ctx = {
 };
 
 const CarrinhoCtx = createContext<Ctx | null>(null);
-const CHAVE = "imperio-carrinho-v1";
 
 export function CarrinhoProvider({ children }: { children: React.ReactNode }) {
-  const [itens, setItens] = useState<ItemCarrinho[]>([]);
+  const itens = useSyncExternalStore(assinar, ler, () => VAZIO);
   const [aberto, setAberto] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
-  const carregado = useRef(false);
   const timerAviso = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  useEffect(() => {
-    try {
-      const salvo = localStorage.getItem(CHAVE);
-      if (salvo) setItens(JSON.parse(salvo));
-    } catch {}
-    carregado.current = true;
-  }, []);
-
-  useEffect(() => {
-    if (!carregado.current) return;
-    try {
-      localStorage.setItem(CHAVE, JSON.stringify(itens));
-    } catch {}
-  }, [itens]);
 
   // trava a rolagem da página com a gaveta aberta
   useEffect(() => {
@@ -54,18 +87,17 @@ export function CarrinhoProvider({ children }: { children: React.ReactNode }) {
   }, [aberto]);
 
   const adicionar = useCallback((item: NovoItem, qtd = 1) => {
-    setItens((atual) => {
-      const existe = atual.find((i) => i.id === item.id);
-      if (existe) return atual.map((i) => (i.id === item.id ? { ...i, ...item, qtd: Math.min(i.qtd + qtd, 99) } : i));
-      return [...atual, { ...item, qtd }];
-    });
+    const atual = ler();
+    const existe = atual.find((i) => i.id === item.id);
+    gravar(existe ? atual.map((i) => (i.id === item.id ? { ...i, ...item, qtd: Math.min(i.qtd + qtd, 99) } : i)) : [...atual, { ...item, qtd }]);
     setAviso(`${item.nome} foi para o carrinho`);
     clearTimeout(timerAviso.current);
     timerAviso.current = setTimeout(() => setAviso(null), 3800);
   }, []);
 
   const alterar = useCallback((id: number, qtd: number) => {
-    setItens((atual) => (qtd <= 0 ? atual.filter((i) => i.id !== id) : atual.map((i) => (i.id === id ? { ...i, qtd: Math.min(qtd, 99) } : i))));
+    const atual = ler();
+    gravar(qtd <= 0 ? atual.filter((i) => i.id !== id) : atual.map((i) => (i.id === id ? { ...i, qtd: Math.min(qtd, 99) } : i)));
   }, []);
 
   const valor = useMemo<Ctx>(
@@ -77,8 +109,8 @@ export function CarrinhoProvider({ children }: { children: React.ReactNode }) {
       aviso,
       adicionar,
       alterar,
-      remover: (id) => setItens((a) => a.filter((i) => i.id !== id)),
-      limpar: () => setItens([]),
+      remover: (id) => gravar(ler().filter((i) => i.id !== id)),
+      limpar: () => gravar(VAZIO),
       abrir: () => {
         setAviso(null);
         setAberto(true);

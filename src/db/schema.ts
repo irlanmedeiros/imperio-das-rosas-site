@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -31,7 +32,7 @@ export const produtos = pgTable("produtos", {
   ordem: integer("ordem").notNull().default(0),
   criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
   atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [index("produtos_ativo_ordem_idx").on(t.ativo, t.ordem)]);
 
 export type ItemPedido = { produtoId: number; nome: string; preco: number; qtd: number; foto?: string | null };
 
@@ -55,7 +56,7 @@ export const pedidos = pgTable("pedidos", {
   itens: jsonb("itens").$type<ItemPedido[]>().notNull(),
   total: integer("total").notNull(),
   criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [index("pedidos_status_idx").on(t.status), index("pedidos_criado_em_idx").on(t.criadoEm)]);
 
 /** Configurações e conteúdo editável, guardados como JSON por chave ("loja", "conteudo"). */
 export const configuracoes = pgTable("configuracoes", {

@@ -4,9 +4,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, LoaderCircle, ShoppingBag, Store, Truck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { criarPedido, type EntradaPedido } from "@/app/(site)/checkout/actions";
-import { useCarrinho } from "@/components/carrinho";
+import { useCarrinho, useHidratado } from "@/components/carrinho";
 import { brl } from "@/lib/format";
 import { LinhaItem } from "./gaveta-carrinho";
 
@@ -23,36 +23,42 @@ function mascaraTelefone(v: string) {
   return `(${d.slice(0, 2)}) ${d.slice(2, d.length - 4)}-${d.slice(-4)}`;
 }
 
+function clienteSalvo(): { nome?: string; telefone?: string } {
+  try {
+    return JSON.parse(localStorage.getItem("imperio-cliente") ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
 export function FormCheckout({ infoEntrega }: { infoEntrega: string }) {
+  // o formulário depende do carrinho e do localStorage: só monta no navegador
+  return useHidratado() ? <Formulario infoEntrega={infoEntrega} /> : <div style={{ minHeight: 400 }} />;
+}
+
+function Formulario({ infoEntrega }: { infoEntrega: string }) {
   const { itens, total, limpar } = useCarrinho();
   const router = useRouter();
   const [pendente, iniciar] = useTransition();
   const [erros, setErros] = useState<Record<string, string>>({});
   const [mensagem, setMensagem] = useState<string | null>(null);
-  const [montado, setMontado] = useState(false);
-  const [f, setF] = useState({
-    clienteNome: "",
-    clienteTelefone: "",
-    tipoEntrega: "entrega" as "entrega" | "retirada",
-    endereco: "",
-    bairro: "",
-    dataEntrega: "",
-    periodo: PERIODOS[0],
-    destinatario: "",
-    mensagemCartao: "",
-    observacoes: "",
-    site: "",
+  const [f, setF] = useState(() => {
+    const salvo = clienteSalvo();
+    return {
+      clienteNome: salvo.nome ?? "",
+      clienteTelefone: salvo.telefone ?? "",
+      tipoEntrega: "entrega" as "entrega" | "retirada",
+      endereco: "",
+      bairro: "",
+      dataEntrega: hoje(),
+      periodo: PERIODOS[0],
+      destinatario: "",
+      mensagemCartao: "",
+      observacoes: "",
+      site: "",
+    };
   });
   const minData = useMemo(() => hoje(), []);
-
-  useEffect(() => {
-    setMontado(true);
-    setF((x) => ({ ...x, dataEntrega: x.dataEntrega || hoje() }));
-    try {
-      const salvo = JSON.parse(localStorage.getItem("imperio-cliente") ?? "{}");
-      setF((x) => ({ ...x, clienteNome: salvo.nome ?? "", clienteTelefone: salvo.telefone ?? "" }));
-    } catch {}
-  }, []);
 
   const set = (campo: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const v = campo === "clienteTelefone" ? mascaraTelefone(e.target.value) : e.target.value;
@@ -80,8 +86,6 @@ export function FormCheckout({ infoEntrega }: { infoEntrega: string }) {
       }
     });
   }
-
-  if (!montado) return <div style={{ minHeight: 400 }} />;
 
   if (itens.length === 0) {
     return (

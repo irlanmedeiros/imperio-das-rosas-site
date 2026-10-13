@@ -4,7 +4,7 @@ import { ClipboardList, ExternalLink, FileText, LayoutDashboard, LogOut, Menu, P
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { sair } from "@/app/admin/login/actions";
 
 const ITENS = [
@@ -19,7 +19,6 @@ const ITENS = [
 export function LateralAdmin({ pedidosNovos }: { pedidosNovos: number }) {
   const pathname = usePathname();
   const [aberta, setAberta] = useState(false);
-  useEffect(() => setAberta(false), [pathname]);
 
   return (
     <>
@@ -44,7 +43,7 @@ export function LateralAdmin({ pedidosNovos }: { pedidosNovos: number }) {
           {ITENS.map((i) => {
             const ativo = i.href === "/admin" ? pathname === "/admin" : pathname.startsWith(i.href);
             return (
-              <Link key={i.href} href={i.href} className={ativo ? "ativo" : undefined}>
+              <Link key={i.href} href={i.href} className={ativo ? "ativo" : undefined} onClick={() => setAberta(false)}>
                 <i.icone />
                 {i.rotulo}
                 {i.href === "/admin/pedidos" && pedidosNovos > 0 && <span className="contador">{pedidosNovos}</span>}

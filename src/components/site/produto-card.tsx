@@ -25,7 +25,7 @@ export function BotaoAdicionar({ p, className = "add-btn", children }: { p: Prod
   return (
     <button
       className={`${className}${ok ? " ok" : ""}`}
-      aria-label={`Adicionar ${p.nome} ao carrinho`}
+      aria-label={children ? undefined : `Adicionar ${p.nome} ao carrinho`}
       onClick={(e) => {
         e.preventDefault();
         adicionar({ id: p.id, slug: p.slug, nome: p.nome, preco: p.preco, foto: p.foto });
@@ -50,14 +50,16 @@ export function BotaoAdicionar({ p, className = "add-btn", children }: { p: Prod
   );
 }
 
-export function ProdutoCard({ p, prioridade = false }: { p: ProdutoPublico; prioridade?: boolean }) {
+const SIZES_GRADE = "(max-width: 640px) 50vw, (max-width: 1080px) 33vw, 300px";
+
+export function ProdutoCard({ p, prioridade = false, sizes = SIZES_GRADE }: { p: ProdutoPublico; prioridade?: boolean; sizes?: string }) {
   const promo = p.precoDe && p.precoDe > p.preco;
   return (
     <article className="produto">
       <Link href={`/produto/${p.slug}`} className="produto-img" aria-label={p.nome}>
         {promo && <span className="selo-promo">Promo</span>}
         {p.foto ? (
-          <Image src={p.foto} alt={p.nome} fill sizes="(max-width: 640px) 50vw, (max-width: 1080px) 33vw, 300px" priority={prioridade} />
+          <Image src={p.foto} alt={p.nome} fill sizes={sizes} loading={prioridade ? "eager" : "lazy"} />
         ) : (
           <Flor style={{ width: 56, margin: "auto", position: "absolute", inset: 0, color: "var(--sage)" }} />
         )}

@@ -1,3 +1,4 @@
+import { exigirAdmin } from "@/lib/auth";
 import { count, desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { db, schema } from "@/db";
@@ -7,6 +8,7 @@ import { ROTULO_STATUS, TabelaPedidos } from "@/components/admin/tabela-pedidos"
 export const metadata = { title: "Pedidos" };
 
 export default async function PedidosPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
+  await exigirAdmin();
   const { status } = await searchParams;
   const filtro = STATUS_PEDIDO.includes(status as StatusPedido) ? (status as StatusPedido) : null;
   const [pedidos, contagem] = await Promise.all([

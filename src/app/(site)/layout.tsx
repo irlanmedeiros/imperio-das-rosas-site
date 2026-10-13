@@ -54,7 +54,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
                 <p>Flores frescas, arranjos feitos à mão e presentes que emocionam. Entrega no mesmo dia em {loja.cidade}.</p>
               </div>
               <div>
-                <h4>Catálogo</h4>
+                <h2>Catálogo</h2>
                 <ul>
                   {categorias.map((c) => (
                     <li key={c.slug}>
@@ -64,7 +64,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
                 </ul>
               </div>
               <div>
-                <h4>Atendimento</h4>
+                <h2>Atendimento</h2>
                 <ul>
                   <li>
                     <Clock /> {loja.horario}
@@ -75,7 +75,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
                 </ul>
               </div>
               <div>
-                <h4>Contato</h4>
+                <h2>Contato</h2>
                 <ul>
                   <li>
                     <WhatsAppIcone width={16} height={16} />

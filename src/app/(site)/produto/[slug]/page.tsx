@@ -8,10 +8,15 @@ import { Revelar } from "@/components/revelar";
 import { Carrossel } from "@/components/site/carrossel";
 import { AcoesProduto } from "@/components/site/acoes-produto";
 import { Preco } from "@/components/site/produto-card";
-import { getLoja, getProduto } from "@/lib/data";
+import { getCatalogo, getLoja, getProduto } from "@/lib/data";
 import { brl } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 86400;
+
+export async function generateStaticParams() {
+  const { produtos } = await getCatalogo();
+  return produtos.map((p) => ({ slug: p.slug }));
+}
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -55,7 +60,7 @@ export default async function ProdutoPage({ params }: Props) {
           <div className="pdp">
             <Revelar className="pdp-foto">
               {p.foto ? (
-                <Image src={p.foto} alt={p.nome} fill priority sizes="(max-width: 900px) 100vw, 50vw" />
+                <Image src={p.foto} alt={p.nome} fill preload fetchPriority="high" sizes="(max-width: 900px) 100vw, 50vw" />
               ) : (
                 <Flor style={{ position: "absolute", inset: 0, margin: "auto", width: 90, color: "var(--sage)" }} />
               )}

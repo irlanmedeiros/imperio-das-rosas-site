@@ -3,8 +3,6 @@ import { Revelar } from "@/components/revelar";
 import { Catalogo } from "@/components/site/catalogo";
 import { getCatalogo } from "@/lib/data";
 
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = {
   title: "Catálogo",
   description: "Buquês, ramalhetes, box, combos, chocolates, pelúcias e vinhos. Escolha e finalize pelo WhatsApp.",
