@@ -1,40 +1,53 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --forest: #3b4a33;
+  --forest-deep: #2c3826;
+  --olive: #6b7f58;
+  --cream: #f7f4ec;
+  --parchment: #eae3d1;
+  --wood-dark: #4a3826;
+  --wood: #9c7a54;
+  --sage: #a9b8a4;
+  --sage-light: #dde3d6;
+  --ink: #3a4436;
+  --muted: #75806f;
+  --line: #e4ddca;
+  --white: #ffffff;
+  --on-dark: #d8decf;
+  --danger: #b4483c;
+  --ok: #4f7a45;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html {
-  height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow-sm: 0 2px 10px rgba(58, 68, 54, 0.08);
+  --shadow: 0 18px 44px rgba(58, 68, 54, 0.14);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: clamp(16px, 4vw, 32px);
+  --header-h: 76px;
 }
 
 * {
-  box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-body), -apple-system, sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+img {
+  max-width: 100%;
+  display: block;
 }
 
 a {
@@ -42,8 +55,244 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--olive);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--sage-light);
+}
+
+.serif {
+  font-family: var(--font-title), Georgia, serif;
+}
+
+.container {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Marca ---------- */
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.marca svg {
+  width: 38px;
+  height: 38px;
+  color: var(--forest);
+  transition: transform 0.8s var(--ease);
+}
+.marca:hover svg {
+  transform: rotate(72deg);
+}
+.marca-nome {
+  display: block;
+  font-family: var(--font-title), serif;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--forest);
+  line-height: 1.05;
+}
+.marca-tag {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--wood);
+}
+
+@keyframes girar {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* ---------- Botões ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 28px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  transition: background 0.3s var(--ease), color 0.3s var(--ease), transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  white-space: nowrap;
+}
+.btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn-primary {
+  background: var(--forest);
+  color: var(--white);
+  box-shadow: 0 8px 22px rgba(59, 74, 51, 0.22);
+}
+.btn-primary:hover {
+  background: var(--forest-deep);
+  box-shadow: 0 12px 28px rgba(59, 74, 51, 0.3);
+}
+.btn-outline {
+  border: 1.5px solid var(--forest);
+  color: var(--forest);
+}
+.btn-outline:hover {
+  background: var(--forest);
+  color: var(--white);
+}
+.btn-light {
+  background: var(--cream);
+  color: var(--forest-deep);
+}
+.btn-light:hover {
+  background: var(--white);
+}
+.btn-whats {
+  background: #1f9d55;
+  color: var(--white);
+  box-shadow: 0 8px 22px rgba(31, 157, 85, 0.25);
+}
+.btn-whats:hover {
+  background: #17854a;
+}
+.btn-block {
+  width: 100%;
+}
+.btn-sm {
+  min-height: 38px;
+  padding: 0 18px;
+  font-size: 11.5px;
+}
+.btn[disabled] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ---------- Busca ---------- */
+.busca {
+  flex: 1 1 260px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  min-height: 46px;
+  border-radius: 999px;
+  border: 1px solid #dcd5c2;
+  background: var(--white);
+}
+.busca:focus-within {
+  border-color: var(--olive);
+  box-shadow: 0 0 0 4px rgba(107, 127, 88, 0.15);
+}
+.busca svg {
+  width: 17px;
+  height: 17px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.busca input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 15px;
+  min-width: 0;
+}
+
+/* ---------- Formulários ---------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field > span,
+.field > label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.field small {
+  font-size: 12px;
+  color: var(--muted);
+}
+.input {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-size: 15px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+textarea.input {
+  min-height: 96px;
+  resize: vertical;
+  line-height: 1.5;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--olive);
+  box-shadow: 0 0 0 4px rgba(107, 127, 88, 0.15);
+}
+.input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+.erro {
+  color: var(--danger);
+  font-size: 13px;
+}
+
+@media (prefers-reduced-motion: reduce) {
   html {
-    color-scheme: dark;
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

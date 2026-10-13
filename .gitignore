@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# credenciais locais
+ACESSO-ADMIN.local.txt
+.admin-env.tmp
