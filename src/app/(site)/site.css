@@ -849,35 +849,18 @@
 }
 .sobre-cartao {
   position: absolute;
-  bottom: -26px;
-  left: -26px;
-  background: var(--cream);
-  padding: 24px 32px;
-  border-radius: 6px;
-  box-shadow: 0 18px 44px rgba(74, 56, 38, 0.25);
-  text-align: center;
+  bottom: -30px;
+  left: -30px;
+  width: clamp(220px, 27vw, 340px);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 18px 44px rgba(74, 56, 38, 0.28);
   rotate: -3deg;
 }
-.sobre-cartao svg {
-  width: 30px;
-  height: 30px;
-  color: var(--forest);
-  margin: 0 auto 8px;
-}
-.sobre-cartao strong {
+.sobre-cartao img {
   display: block;
-  font-family: var(--font-title), serif;
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  color: var(--forest);
-}
-.sobre-cartao small {
-  font-size: 9px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--wood);
+  width: 100%;
+  height: auto;
 }
 
 /* ================= Ocasiões ================= */

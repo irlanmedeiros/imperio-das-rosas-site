@@ -123,9 +123,7 @@ export default async function Home() {
           <div className="sobre-visual">
             <FotoFlutuante src={conteudo.sobre.imagem} alt="Flores do Império das Rosas" className="sobre-foto" />
             <Revelar className="sobre-cartao" atraso={0.3}>
-              <Flor />
-              <strong>Império das Rosas</strong>
-              <small>Floricultura</small>
+              <Image src="/img/cartao-sobre.jpg" alt="Cartão Império das Rosas, desde 1999" width={1200} height={668} sizes="(max-width: 900px) 62vw, 340px" />
             </Revelar>
           </div>
         </div>
