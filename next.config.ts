@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Cloudflare: o pg (banco local) carrega pg-cloudflare/dist no Workers, que o rastreamento do Next não copia sozinho
+  outputFileTracingIncludes: { "/**": ["./node_modules/pg-cloudflare/dist/**"] },
   images: {
     remotePatterns: [new URL("https://*.public.blob.vercel-storage.com/**")],
     formats: ["image/avif", "image/webp"],

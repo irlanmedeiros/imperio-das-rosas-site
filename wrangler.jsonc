@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "imperio-das-rosas",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "imperio-das-rosas" }],
+  // Cache das páginas e dos dados (unstable_cache) no R2; tags revalidadas pelo admin ficam no D1.
+  "r2_buckets": [{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "imperio-das-rosas-cache" }],
+  "d1_databases": [
+    { "binding": "NEXT_TAG_CACHE_D1", "database_name": "imperio-das-rosas-tags", "database_id": "00000000-0000-0000-0000-000000000000" }
+  ],
+  "images": { "binding": "IMAGES" },
+  "observability": { "enabled": true }
+}
