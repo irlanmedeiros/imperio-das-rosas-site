@@ -31,6 +31,8 @@ npm run dev                     # http://localhost:3000
 
 Use um banco de **desenvolvimento** (ex.: uma branch do Neon), não o de produção.
 
+Também funciona com um Postgres local: com `DATABASE_URL` apontando para `localhost`, `src/db/index.ts` usa o driver `pg` em vez do driver HTTP do Neon. No macOS: `brew install postgresql@17 && brew services start postgresql@17 && createdb imperio_das_rosas`, e `DATABASE_URL="postgresql://<seu-usuário>@localhost:5432/imperio_das_rosas"`.
+
 > No `.env.local`, os `$` do `ADMIN_PASSWORD_HASH` precisam ser escapados (`\$`), senão o Next lê o hash vazio e o login falha. Na Vercel o valor vai sem escape.
 
 ### Scripts

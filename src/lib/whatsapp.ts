@@ -2,8 +2,9 @@ import type { Pedido } from "@/db/schema";
 import { brl, dataBR } from "./format";
 
 export function linkWhatsApp(numero: string, mensagem?: string) {
-  const base = `https://wa.me/${numero}`;
-  return mensagem ? `${base}?text=${encodeURIComponent(mensagem)}` : base;
+  if (!mensagem) return `https://wa.me/${numero}`;
+  // Com texto, vai direto para api.whatsapp.com: o redirecionamento do wa.me troca emojis (🌹) por "�".
+  return `https://api.whatsapp.com/send?phone=${numero}&text=${encodeURIComponent(mensagem)}`;
 }
 
 type PedidoMsg = Pick<

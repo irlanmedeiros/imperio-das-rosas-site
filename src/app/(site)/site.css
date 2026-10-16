@@ -320,7 +320,7 @@
 }
 .beneficios-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .beneficio {
   display: flex;
@@ -434,7 +434,7 @@
 /* ================= Categorias ================= */
 .cats-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 16px;
 }
 .cat-card {
@@ -793,7 +793,7 @@
 }
 .grade {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 22px;
 }
 .vazio {
@@ -866,7 +866,7 @@
 /* ================= Ocasiões ================= */
 .ocasioes-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
 }
 .ocasiao {
@@ -1034,7 +1034,7 @@
 /* ================= Instagram ================= */
 .insta-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
 }
 .insta-item {
@@ -1479,7 +1479,7 @@
 }
 .campos {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 .campos .inteiro {
@@ -1487,7 +1487,7 @@
 }
 .opcoes {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 18px;
 }
@@ -1597,10 +1597,10 @@
     font-size: 16px;
   }
   .grade {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .rodape-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1644,7 +1644,7 @@
     padding-left: var(--gutter);
   }
   .beneficios-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     row-gap: 18px;
   }
   .beneficio {
@@ -1656,7 +1656,7 @@
   .sobre-grid,
   .pdp,
   .checkout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .sobre-visual {
     margin: 0 10px 30px 18px;
@@ -1666,16 +1666,16 @@
     position: static;
   }
   .ocasioes-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .insta-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .selo-girando {
     display: none;
   }
   .cats-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .cat-card {
     aspect-ratio: 1;
@@ -1684,11 +1684,11 @@
 
 @media (max-width: 640px) {
   .cats-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
   .grade {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
   .produto-info {
@@ -1721,6 +1721,22 @@
   .rodape-grid {
     grid-template-columns: 1fr;
     gap: 32px;
+  }
+  .btn {
+    max-width: 100%;
+    padding: 0 20px;
+    letter-spacing: 1.2px;
+  }
+  .pdp-acoes .btn-primary {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+  .ocasiao-info {
+    padding: 14px;
+  }
+  .ocasiao-info h3 {
+    font-size: 19px;
+    overflow-wrap: anywhere;
   }
   .whats-flutuante {
     right: 16px;
