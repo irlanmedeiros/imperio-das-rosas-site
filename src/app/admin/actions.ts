@@ -1,9 +1,8 @@
 "use server";
 
-import { put } from "@vercel/blob";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { and, eq, min, ne } from "drizzle-orm";
 import { revalidatePath, updateTag } from "next/cache";
-import sharp from "sharp";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import { STATUS_PEDIDO, type StatusPedido } from "@/lib/status";
@@ -22,21 +21,35 @@ function atualizarSite() {
 
 /* ---------------- Imagens ---------------- */
 
+/** Tipo real da imagem pelos primeiros bytes (o navegador manda JPEG; PNG/WebP só se a redução falhar). */
+function tipoImagem(b: Uint8Array): { tipo: string; ext: string } | null {
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return { tipo: "image/jpeg", ext: "jpg" };
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return { tipo: "image/png", ext: "png" };
+  if (String.fromCharCode(...b.slice(0, 4)) === "RIFF" && String.fromCharCode(...b.slice(8, 12)) === "WEBP") return { tipo: "image/webp", ext: "webp" };
+  return null;
+}
+
 export async function enviarImagem(form: FormData): Promise<{ ok: true; url: string } | { ok: false; erro: string }> {
   await exigirAdmin();
   const arquivo = form.get("arquivo");
   const pasta = String(form.get("pasta") ?? "produtos").replace(/[^a-z]/g, "") || "produtos";
   if (!(arquivo instanceof File) || arquivo.size === 0) return { ok: false, erro: "Nenhuma imagem enviada." };
-  if (!arquivo.type.startsWith("image/")) return { ok: false, erro: "O arquivo precisa ser uma imagem." };
+  if (arquivo.size > 4 * 1024 * 1024) return { ok: false, erro: "Imagem muito grande (máx. 4 MB)." };
   try {
-    const entrada = Buffer.from(await arquivo.arrayBuffer());
-    const saida = await sharp(entrada).rotate().resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true }).jpeg({ quality: 84, mozjpeg: true }).toBuffer();
+    const bytes = new Uint8Array(await arquivo.arrayBuffer());
+    const formato = tipoImagem(bytes);
+    if (!formato) return { ok: false, erro: "Use uma foto em JPG, PNG ou WebP." };
+    // A foto já chega reduzida pelo navegador (upload-imagem.tsx); aqui só vai para o R2.
     const nome = slugify(arquivo.name.replace(/\.[^.]+$/, "")) || "foto";
-    const blob = await put(`${pasta}/${nome}.jpg`, saida, { access: "public", addRandomSuffix: true, contentType: "image/jpeg" });
-    return { ok: true, url: blob.url };
+    const chave = `${pasta}/${nome}-${crypto.randomUUID().slice(0, 8)}.${formato.ext}`;
+    const { env } = await getCloudflareContext({ async: true });
+    await env.FOTOS.put(chave, bytes, {
+      httpMetadata: { contentType: formato.tipo, cacheControl: "public, max-age=31536000, immutable" },
+    });
+    return { ok: true, url: `${process.env.FOTOS_URL_BASE}/${chave}` };
   } catch (e) {
     console.error(e);
-    return { ok: false, erro: "Não foi possível processar a imagem." };
+    return { ok: false, erro: "Não foi possível enviar a imagem." };
   }
 }
 

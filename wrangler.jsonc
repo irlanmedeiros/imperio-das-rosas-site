@@ -10,10 +10,16 @@
   },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "imperio-das-rosas" }],
   // Cache das páginas e dos dados (unstable_cache) no R2; tags revalidadas pelo admin ficam no D1.
-  "r2_buckets": [{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "imperio-das-rosas-cache" }],
+  "r2_buckets": [
+    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "imperio-das-rosas-cache" },
+    // Fotos enviadas pelo admin (públicas). remote: o `next dev` também grava no bucket real.
+    { "binding": "FOTOS", "bucket_name": "imperio-das-rosas-fotos", "remote": true }
+  ],
   "d1_databases": [
-    { "binding": "NEXT_TAG_CACHE_D1", "database_name": "imperio-das-rosas-tags", "database_id": "00000000-0000-0000-0000-000000000000" }
+    { "binding": "NEXT_TAG_CACHE_D1", "database_name": "imperio-das-rosas-tags", "database_id": "b81065f9-5b16-48f5-ac8a-9d40c730c61d" }
   ],
   "images": { "binding": "IMAGES" },
+  // Endereço público do bucket de fotos (r2.dev por enquanto; depois fotos.<domínio>)
+  "vars": { "FOTOS_URL_BASE": "https://PENDENTE.r2.dev" },
   "observability": { "enabled": true }
 }

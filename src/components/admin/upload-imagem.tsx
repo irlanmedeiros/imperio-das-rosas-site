@@ -5,15 +5,15 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { enviarImagem } from "@/app/admin/actions";
 
-/** Reduz a foto no navegador antes de enviar (fotos de celular passam de 4 MB). */
-async function reduzir(arquivo: File, maximo = 2000): Promise<Blob> {
+/** Reduz a foto no navegador antes de enviar (máx. 1600px, JPEG); o servidor só guarda no R2. */
+async function reduzir(arquivo: File, maximo = 1600): Promise<Blob> {
   const bitmap = await createImageBitmap(arquivo);
   const escala = Math.min(1, maximo / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bitmap.width * escala);
   canvas.height = Math.round(bitmap.height * escala);
   canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  return new Promise((ok, falha) => canvas.toBlob((b) => (b ? ok(b) : falha(new Error("falha ao converter"))), "image/jpeg", 0.88));
+  return new Promise((ok, falha) => canvas.toBlob((b) => (b ? ok(b) : falha(new Error("falha ao converter"))), "image/jpeg", 0.85));
 }
 
 export function UploadImagem({
