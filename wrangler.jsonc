@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "imperio-das-rosas",
+  "name": "imperio-das-rosas-site",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
@@ -8,7 +8,7 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
-  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "imperio-das-rosas" }],
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "imperio-das-rosas-site" }],
   // Cache das páginas e dos dados (unstable_cache) no R2; tags revalidadas pelo admin ficam no D1.
   "r2_buckets": [
     { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "imperio-das-rosas-cache" },
@@ -19,7 +19,7 @@
     { "binding": "NEXT_TAG_CACHE_D1", "database_name": "imperio-das-rosas-tags", "database_id": "b81065f9-5b16-48f5-ac8a-9d40c730c61d" }
   ],
   "images": { "binding": "IMAGES" },
-  // Endereço público do bucket de fotos (r2.dev por enquanto; depois fotos.<domínio>)
-  "vars": { "FOTOS_URL_BASE": "https://PENDENTE.r2.dev" },
+  // Endereço público do bucket de fotos (domínio personalizado do R2)
+  "vars": { "FOTOS_URL_BASE": "https://fotos.imperiodasrosas.com" },
   "observability": { "enabled": true }
 }

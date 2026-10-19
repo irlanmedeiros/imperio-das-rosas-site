@@ -6,8 +6,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: { "/**": ["./node_modules/pg-cloudflare/dist/**"] },
   images: {
     remotePatterns: [
-      new URL("https://*.r2.dev/**"), // fotos no R2 (Cloudflare)
-      new URL("https://*.public.blob.vercel-storage.com/**"), // fotos antigas, até migrar
+      new URL("https://fotos.imperiodasrosas.com/**"), // fotos no R2 (Cloudflare)
     ],
     formats: ["image/avif", "image/webp"],
     qualities: [75, 85], // 85 só na foto principal do topo
@@ -44,4 +43,4 @@ export default nextConfig;
 
 // `next dev` com os bindings da Cloudflare (R2 das fotos etc.)
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
-initOpenNextCloudflareForDev();
+if (process.env.NODE_ENV === "development") initOpenNextCloudflareForDev();
