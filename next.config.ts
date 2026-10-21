@@ -3,7 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
-    remotePatterns: [new URL("https://*.public.blob.vercel-storage.com/**")],
+    remotePatterns: [
+      new URL("https://fotos.imperiodasrosas.com/**"), // fotos no R2 (Cloudflare)
+      new URL("https://*.public.blob.vercel-storage.com/**"), // fotos antigas
+    ],
     formats: ["image/avif", "image/webp"],
     qualities: [75, 85], // 85 só na foto principal do topo
     // 480: cards do carrossel no celular (evita baixar a versão de 640px)
