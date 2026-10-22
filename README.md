@@ -93,7 +93,18 @@ data/                  catálogo inicial exportado do banco
 - Upload aceita só imagens, reduzidas no navegador e de novo no servidor (máx. 1600px, JPEG).
 - Cabeçalhos de segurança em `next.config.ts`.
 
-## Deploy
+## Deploy na Cloudflare (Workers)
+
+O site roda no Cloudflare Workers via [OpenNext](https://opennext.js.org/cloudflare) (`wrangler.jsonc`, `open-next.config.ts`). Fotos no R2 (`fotos.imperiodasrosas.com`), cache das páginas no R2 e tags de revalidação no D1.
+
+```bash
+cp .env.cloudflare.example .env.cloudflare   # preencher com os valores de produção
+bash scripts/deploy-cloudflare.sh            # build limpo da branch cloudflare + deploy + secrets
+```
+
+Precisa do `wrangler login` feito uma vez na conta da Cloudflare.
+
+## Deploy (Vercel, antigo)
 
 O projeto está ligado à Vercel (`irlanmedeiros-projects/imperio-das-rosas`). Com o repositório conectado, cada push na `main` publica em produção e cada PR gera um preview.
 
