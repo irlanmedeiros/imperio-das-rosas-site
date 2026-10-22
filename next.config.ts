@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       new URL("https://fotos.imperiodasrosas.com/**"), // fotos no R2 (Cloudflare)
+      new URL("https://*.public.blob.vercel-storage.com/**"), // fotos antigas (pedidos antigos)
     ],
     formats: ["image/avif", "image/webp"],
     qualities: [75, 85], // 85 só na foto principal do topo
@@ -19,6 +20,17 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: "4mb" },
     // carrega só os ícones/funções usados dessas bibliotecas
     optimizePackageImports: ["lucide-react", "motion"],
+  },
+  // www → domínio principal (na Vercel isso era configurado no painel)
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.imperiodasrosas.com" }],
+        destination: "https://imperiodasrosas.com/:path*",
+        permanent: true,
+      },
+    ];
   },
   async headers() {
     return [
