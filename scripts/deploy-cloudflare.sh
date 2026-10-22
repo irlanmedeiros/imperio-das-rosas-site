@@ -12,9 +12,10 @@ RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
 ARQ_ENV="$RAIZ/.env.cloudflare"
 [ -f "$ARQ_ENV" ] || { echo "Falta $ARQ_ENV (copie de .env.cloudflare.example e preencha)."; exit 1; }
 set -a; source "$ARQ_ENV"; set +a
-for v in DATABASE_URL ADMIN_EMAIL ADMIN_PASSWORD_HASH; do
-  [ -n "${!v:-}" ] || { echo "Preencha $v em .env.cloudflare."; exit 1; }
-done
+[ -n "${DATABASE_URL:-}" ] || { echo "Preencha DATABASE_URL em .env.cloudflare."; exit 1; }
+if [ -z "${ADMIN_EMAIL:-}" ] || [ -z "${ADMIN_PASSWORD_HASH:-}" ]; then
+  echo "⚠️  ADMIN_EMAIL/ADMIN_PASSWORD_HASH em branco: o login do /admin não funciona até gravá-los (npx wrangler secret put ...)."
+fi
 [ -n "${AUTH_SECRET:-}" ] || AUTH_SECRET="$(node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))")"
 SITE_URL="${NEXT_PUBLIC_SITE_URL:-https://imperiodasrosas.com}"
 
@@ -36,8 +37,8 @@ npx opennextjs-cloudflare deploy
 
 echo "→ Gravando as variáveis secretas no Worker"
 node -e '
-  const v = ["DATABASE_URL", "AUTH_SECRET", "ADMIN_EMAIL", "ADMIN_PASSWORD_HASH"];
+  const v = ["DATABASE_URL", "AUTH_SECRET", "ADMIN_EMAIL", "ADMIN_PASSWORD_HASH"].filter((k) => process.env[k]);
   process.stdout.write(JSON.stringify(Object.fromEntries(v.map((k) => [k, process.env[k]]))));
-' | DATABASE_URL="$DATABASE_URL" AUTH_SECRET="$AUTH_SECRET" ADMIN_EMAIL="$ADMIN_EMAIL" ADMIN_PASSWORD_HASH="$ADMIN_PASSWORD_HASH" npx wrangler secret bulk
+' | DATABASE_URL="$DATABASE_URL" AUTH_SECRET="$AUTH_SECRET" ADMIN_EMAIL="${ADMIN_EMAIL:-}" ADMIN_PASSWORD_HASH="${ADMIN_PASSWORD_HASH:-}" npx wrangler secret bulk
 
 echo "✅ Publicado. Endereço do Worker: veja a linha 'workers.dev' acima."
