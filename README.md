@@ -100,9 +100,13 @@ data/                  catálogo inicial exportado do banco
 
 O site roda no Cloudflare Workers via [OpenNext](https://opennext.js.org/cloudflare) (`wrangler.jsonc`, `open-next.config.ts`). Fotos no R2 (`fotos.imperiodasrosas.com`), cache das páginas no R2 e tags de revalidação no D1.
 
+**Publicar = fazer push na `main`.** O Workers Builds da Cloudflare (repositório ligado em Worker → Configurações → Compilações, branch de produção `main`) roda `npx opennextjs-cloudflare build` e `npx opennextjs-cloudflare deploy`. O build não precisa do banco: sem `DATABASE_URL`, as páginas viram dinâmicas e buscam os dados no Worker (ver `semBancoNoBuild` em `src/lib/data.ts`). As senhas (`DATABASE_URL`, `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH`) ficam como *secrets* do Worker.
+
+Alternativa manual, com páginas estáticas geradas com o banco:
+
 ```bash
-cp .env.cloudflare.example .env.cloudflare   # preencher com os valores de produção
-bash scripts/deploy-cloudflare.sh            # build limpo da branch main + deploy + secrets
+cp .env.cloudflare.example .env.cloudflare   # opcional: guardar DATABASE_URL
+bash scripts/deploy-cloudflare.sh            # build limpo da main + deploy + secrets
 ```
 
 Precisa do `wrangler login` feito uma vez na conta da Cloudflare.
