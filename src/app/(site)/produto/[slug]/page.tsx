@@ -14,6 +14,7 @@ import { brl } from "@/lib/format";
 export const revalidate = 86400;
 
 export async function generateStaticParams() {
+  if (!process.env.DATABASE_URL) return []; // build sem banco: as páginas são geradas no primeiro acesso
   const { produtos } = await getCatalogo();
   return produtos.map((p) => ({ slug: p.slug }));
 }

@@ -3,7 +3,7 @@ import { getCatalogo } from "@/lib/data";
 
 export const revalidate = 86400;
 
-const URL_SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://imperio-das-rosas.vercel.app";
+const URL_SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://imperiodasrosas.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { produtos } = await getCatalogo();

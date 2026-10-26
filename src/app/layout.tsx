@@ -5,7 +5,7 @@ import "./globals.css";
 const titulo = Playfair_Display({ subsets: ["latin"], variable: "--font-title", display: "swap" });
 const corpo = Inter({ subsets: ["latin"], variable: "--font-body", display: "swap" });
 
-const URL_SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://imperio-das-rosas.vercel.app";
+const URL_SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://imperiodasrosas.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(URL_SITE),

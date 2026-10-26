@@ -1,6 +1,7 @@
 import "server-only";
 import { asc, eq } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
+import { connection } from "next/server";
 import { db, schema } from "@/db";
 import { CONTEUDO_PADRAO, LOJA_PADRAO, conteudoSchema, lojaSchema, type Conteudo, type Loja } from "./config-types";
 
@@ -33,10 +34,33 @@ export async function lerConfig<T>(chave: "loja" | "conteudo"): Promise<T> {
   return (r.success ? r.data : CONTEUDO_PADRAO) as T;
 }
 
-export const getLoja = unstable_cache(() => lerConfig<Loja>("loja"), ["loja", VERSAO_CACHE], { tags: [TAG_LOJA] });
-export const getConteudo = unstable_cache(() => lerConfig<Conteudo>("conteudo"), ["conteudo", VERSAO_CACHE], { tags: [TAG_LOJA] });
+/**
+ * Build sem DATABASE_URL (build automático da Cloudflare): a página vira dinâmica e busca os dados
+ * quando o site está no ar, onde o banco existe. Com DATABASE_URL, as páginas continuam estáticas.
+ */
+export async function semBancoNoBuild() {
+  if (!process.env.DATABASE_URL) await connection();
+}
 
-export const getCatalogo = unstable_cache(
+const lojaEmCache = unstable_cache(() => lerConfig<Loja>("loja"), ["loja", VERSAO_CACHE], { tags: [TAG_LOJA] });
+const conteudoEmCache = unstable_cache(() => lerConfig<Conteudo>("conteudo"), ["conteudo", VERSAO_CACHE], { tags: [TAG_LOJA] });
+
+export async function getLoja() {
+  await semBancoNoBuild();
+  return lojaEmCache();
+}
+
+export async function getConteudo() {
+  await semBancoNoBuild();
+  return conteudoEmCache();
+}
+
+export async function getCatalogo() {
+  await semBancoNoBuild();
+  return catalogoEmCache();
+}
+
+const catalogoEmCache = unstable_cache(
   async () => {
     const cats = await db.select().from(schema.categorias).orderBy(asc(schema.categorias.ordem), asc(schema.categorias.id));
     const rows = await db
