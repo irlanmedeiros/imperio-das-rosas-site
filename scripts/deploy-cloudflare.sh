@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Publica o site no Cloudflare Workers a partir da branch `cloudflare` do GitHub.
+# Publica o site no Cloudflare Workers a partir da branch `main` do GitHub.
 #
 #   bash scripts/deploy-cloudflare.sh
 #
@@ -35,9 +35,9 @@ fi
 SITE_URL="${NEXT_PUBLIC_SITE_URL:-https://imperiodasrosas.com}"
 
 COPIA="$(mktemp -d)/imperio-cf"
-echo "→ Cópia limpa da branch cloudflare em $COPIA"
-git -C "$RAIZ" fetch -q origin cloudflare
-git -C "$RAIZ" worktree add -q --detach "$COPIA" origin/cloudflare
+echo "→ Cópia limpa da branch main em $COPIA"
+git -C "$RAIZ" fetch -q origin main
+git -C "$RAIZ" worktree add -q --detach "$COPIA" origin/main
 trap 'git -C "$RAIZ" worktree remove --force "$COPIA" >/dev/null 2>&1 || true' EXIT
 cd "$COPIA"
 

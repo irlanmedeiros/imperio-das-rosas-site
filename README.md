@@ -102,12 +102,16 @@ O site roda no Cloudflare Workers via [OpenNext](https://opennext.js.org/cloudfl
 
 ```bash
 cp .env.cloudflare.example .env.cloudflare   # preencher com os valores de produção
-bash scripts/deploy-cloudflare.sh            # build limpo da branch cloudflare + deploy + secrets
+bash scripts/deploy-cloudflare.sh            # build limpo da branch main + deploy + secrets
 ```
 
 Precisa do `wrangler login` feito uma vez na conta da Cloudflare.
 
-## Deploy (Vercel, antigo)
+## Vercel (desligada)
+
+Desde 26/10/2026 o domínio aponta para a Cloudflare e o projeto na Vercel está sem Git e sem domínio. **Não apague o projeto nem o Storage da Vercel**: o banco Neon ainda é a integração da Vercel (variável `DATABASE_URL`).
+
+### Como era o deploy na Vercel
 
 O projeto está ligado à Vercel (`irlanmedeiros-projects/imperio-das-rosas`). Com o repositório conectado, cada push na `main` publica em produção e cada PR gera um preview.
 
