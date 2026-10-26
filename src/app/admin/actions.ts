@@ -6,10 +6,12 @@ import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import { STATUS_PEDIDO, type StatusPedido } from "@/lib/status";
-import { exigirAdmin } from "@/lib/auth";
+import { buscarUsuario, exigirAdmin, exigirDono } from "@/lib/auth";
 import { conteudoSchema, lojaSchema, type Conteudo, type Loja } from "@/lib/config-types";
 import { TAG_LOJA } from "@/lib/data";
 import { slugify } from "@/lib/format";
+import { tipoImagem } from "@/lib/imagem";
+import { gerarHash, normalizarEmail, novoUsuarioSchema, PAPEIS, podeRemover, senhaSchema, type NovoUsuario, type Papel } from "@/lib/usuarios";
 
 export type Resultado = { ok: true; id?: number; mensagem?: string } | { ok: false; erro: string };
 
@@ -20,14 +22,6 @@ function atualizarSite() {
 }
 
 /* ---------------- Imagens ---------------- */
-
-/** Tipo real da imagem pelos primeiros bytes (o navegador manda JPEG; PNG/WebP só se a redução falhar). */
-function tipoImagem(b: Uint8Array): { tipo: string; ext: string } | null {
-  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return { tipo: "image/jpeg", ext: "jpg" };
-  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return { tipo: "image/png", ext: "png" };
-  if (String.fromCharCode(...b.slice(0, 4)) === "RIFF" && String.fromCharCode(...b.slice(8, 12)) === "WEBP") return { tipo: "image/webp", ext: "webp" };
-  return null;
-}
 
 export async function enviarImagem(form: FormData): Promise<{ ok: true; url: string } | { ok: false; erro: string }> {
   await exigirAdmin();
@@ -170,4 +164,49 @@ export async function mudarStatusPedido(id: number, status: StatusPedido): Promi
   if (!STATUS_PEDIDO.includes(status)) return { ok: false, erro: "Status inválido" };
   await db.update(schema.pedidos).set({ status }).where(eq(schema.pedidos.id, id));
   return { ok: true };
+}
+
+/* ---------------- Usuários (só o dono) ---------------- */
+
+export async function criarUsuario(dados: NovoUsuario): Promise<Resultado> {
+  await exigirDono();
+  const r = novoUsuarioSchema.safeParse(dados);
+  if (!r.success) return { ok: false, erro: r.error.issues[0].message };
+  const { nome, email, senha, papel } = r.data;
+  if (process.env.ADMIN_EMAIL && email === normalizarEmail(process.env.ADMIN_EMAIL)) return { ok: false, erro: "Esse e-mail já é o da conta principal." };
+  if (await buscarUsuario(email)) return { ok: false, erro: "Já existe um usuário com esse e-mail." };
+  await db.insert(schema.usuarios).values({ nome, email, papel, senhaHash: await gerarHash(senha) });
+  revalidatePath("/admin/usuarios");
+  return { ok: true, mensagem: `${nome} já pode entrar no painel.` };
+}
+
+export async function redefinirSenhaUsuario(id: number, senha: string): Promise<Resultado> {
+  await exigirDono();
+  const r = senhaSchema.safeParse(senha);
+  if (!r.success) return { ok: false, erro: r.error.issues[0].message };
+  const feito = await db.update(schema.usuarios).set({ senhaHash: await gerarHash(r.data) }).where(eq(schema.usuarios.id, id)).returning({ id: schema.usuarios.id });
+  if (!feito.length) return { ok: false, erro: "Usuário não encontrado." };
+  return { ok: true, mensagem: "Senha alterada." };
+}
+
+export async function mudarPapelUsuario(id: number, papel: Papel): Promise<Resultado> {
+  const quem = await exigirDono();
+  if (!PAPEIS.includes(papel)) return { ok: false, erro: "Papel inválido" };
+  const [alvo] = await db.select({ email: schema.usuarios.email }).from(schema.usuarios).where(eq(schema.usuarios.id, id));
+  if (!alvo) return { ok: false, erro: "Usuário não encontrado." };
+  if (alvo.email === quem.email) return { ok: false, erro: "Você não pode mudar o próprio acesso." };
+  await db.update(schema.usuarios).set({ papel }).where(eq(schema.usuarios.id, id));
+  revalidatePath("/admin/usuarios");
+  return { ok: true };
+}
+
+export async function removerUsuario(id: number): Promise<Resultado> {
+  const quem = await exigirDono();
+  const [alvo] = await db.select({ email: schema.usuarios.email }).from(schema.usuarios).where(eq(schema.usuarios.id, id));
+  if (!alvo) return { ok: false, erro: "Usuário não encontrado." };
+  const pode = podeRemover(alvo.email, quem);
+  if (!pode.ok) return pode;
+  await db.delete(schema.usuarios).where(eq(schema.usuarios.id, id));
+  revalidatePath("/admin/usuarios");
+  return { ok: true, mensagem: "Usuário removido." };
 }

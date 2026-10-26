@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardList, ExternalLink, FileText, LayoutDashboard, LogOut, Menu, Package, Settings, Tags, X } from "lucide-react";
+import { ClipboardList, ExternalLink, FileText, LayoutDashboard, LogOut, Menu, Package, Settings, Tags, Users, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,9 +14,10 @@ const ITENS = [
   { href: "/admin/categorias", rotulo: "Categorias", icone: Tags },
   { href: "/admin/conteudo", rotulo: "Textos e banners", icone: FileText },
   { href: "/admin/configuracoes", rotulo: "Configurações", icone: Settings },
+  { href: "/admin/usuarios", rotulo: "Usuários", icone: Users, soDono: true },
 ];
 
-export function LateralAdmin({ pedidosNovos }: { pedidosNovos: number }) {
+export function LateralAdmin({ pedidosNovos, nome, dono }: { pedidosNovos: number; nome: string; dono: boolean }) {
   const pathname = usePathname();
   const [aberta, setAberta] = useState(false);
 
@@ -40,7 +41,7 @@ export function LateralAdmin({ pedidosNovos }: { pedidosNovos: number }) {
           </button>
         </div>
         <nav className="adm-nav">
-          {ITENS.map((i) => {
+          {ITENS.filter((i) => dono || !i.soDono).map((i) => {
             const ativo = i.href === "/admin" ? pathname === "/admin" : pathname.startsWith(i.href);
             return (
               <Link key={i.href} href={i.href} className={ativo ? "ativo" : undefined} onClick={() => setAberta(false)}>
@@ -52,6 +53,7 @@ export function LateralAdmin({ pedidosNovos }: { pedidosNovos: number }) {
           })}
         </nav>
         <div className="adm-lateral-rodape">
+          <small className="adm-usuario">Olá, {nome}</small>
           <a href="/" target="_blank" rel="noopener">
             <ExternalLink /> Ver site
           </a>

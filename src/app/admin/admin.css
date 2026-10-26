@@ -358,14 +358,17 @@
   bottom: 0;
   z-index: 10;
   display: flex;
+  flex-wrap: wrap; /* no celular a mensagem fica numa linha e o botão embaixo */
   justify-content: flex-end;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
   padding: 14px 0;
   margin-top: 18px;
   background: linear-gradient(180deg, rgba(243, 241, 234, 0), #f3f1ea 30%);
 }
 .barra-salvar .msg {
+  flex: 1 1 220px;
+  min-width: 0;
   margin-right: auto;
   font-size: 14px;
 }
@@ -567,6 +570,95 @@
   margin-bottom: 26px;
 }
 
+.adm-usuario {
+  display: block;
+  padding: 0 12px 8px;
+  font-size: 12px;
+  color: var(--on-dark);
+  opacity: 0.8;
+}
+
+/* usuários (mobile first: cada pessoa vira um cartão; em telas largas, uma linha) */
+.usuarios-lista {
+  list-style: none;
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+.usuario {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.usuario-info {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.usuario-info strong {
+  color: var(--forest);
+}
+.usuario-info span {
+  font-size: 13px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.usuario-papel {
+  height: 44px;
+}
+.usuario-acoes {
+  display: flex;
+  gap: 6px;
+}
+.usuario-nota {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--muted);
+}
+.usuario-senha {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+}
+.papel {
+  justify-self: start;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.papel-dono {
+  background: #e5f1e1;
+  color: #3f7a34;
+}
+.usuarios-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+@media (min-width: 720px) {
+  .usuario {
+    grid-template-columns: minmax(0, 1fr) 160px auto;
+  }
+  .usuario-info {
+    grid-column: auto;
+  }
+  .usuario-nota {
+    grid-column: 2 / -1;
+  }
+  .usuario-senha {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .usuarios-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 1000px) {
   .stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -578,6 +670,17 @@
 }
 
 @media (max-width: 860px) {
+  /* celular: alvos de toque com pelo menos 44px */
+  .btn-sm {
+    min-height: 44px;
+  }
+  .btn-icone {
+    width: 44px;
+    height: 44px;
+  }
+  .passos-status button {
+    min-height: 44px;
+  }
   .adm-lateral {
     transform: translateX(-100%);
     transition: transform 0.4s var(--ease);

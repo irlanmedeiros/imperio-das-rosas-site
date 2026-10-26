@@ -285,6 +285,16 @@ textarea.input {
   font-size: 13px;
 }
 
+/* Celular: campos com 16px — o iPhone dá zoom sozinho ao tocar num campo com fonte menor */
+@media (max-width: 900px) {
+  .input,
+  .busca input,
+  select.ordenar,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

@@ -12,7 +12,22 @@ RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
 ARQ_ENV="$RAIZ/.env.cloudflare"
 [ -f "$ARQ_ENV" ] || { echo "Falta $ARQ_ENV (copie de .env.cloudflare.example e preencha)."; exit 1; }
 set -a; source "$ARQ_ENV"; set +a
-[ -n "${DATABASE_URL:-}" ] || { echo "Preencha DATABASE_URL em .env.cloudflare."; exit 1; }
+if [ -z "${DATABASE_URL:-}" ]; then
+  echo "Cole o endereço do banco de produção (DATABASE_URL, começa com postgresql://) e aperte Enter."
+  echo "Onde achar: Vercel → imperio-das-rosas → Settings → Environment Variables → DATABASE_URL."
+  read -rsp "DATABASE_URL: " DATABASE_URL; echo
+  case "$DATABASE_URL" in postgres://*|postgresql://*) ;; *) echo "Isso não parece um endereço de banco (postgresql://...)."; exit 1;; esac
+  read -rp "Guardar no .env.cloudflare para os próximos deploys? (s/N) " GUARDAR
+  if [ "$GUARDAR" = "s" ] || [ "$GUARDAR" = "S" ]; then
+    DATABASE_URL="$DATABASE_URL" node -e '
+      const fs = require("fs"), f = process.argv[1];
+      const linha = "DATABASE_URL=" + JSON.stringify(process.env.DATABASE_URL);
+      const s = fs.readFileSync(f, "utf8");
+      fs.writeFileSync(f, /^DATABASE_URL=.*$/m.test(s) ? s.replace(/^DATABASE_URL=.*$/m, () => linha) : linha + "\n" + s);
+    ' "$ARQ_ENV"
+    echo "Guardado em .env.cloudflare (fica só neste computador, fora do git)."
+  fi
+fi
 if [ -z "${ADMIN_EMAIL:-}" ] || [ -z "${ADMIN_PASSWORD_HASH:-}" ]; then
   echo "⚠️  ADMIN_EMAIL/ADMIN_PASSWORD_HASH em branco: o login do /admin não funciona até gravá-los (npx wrangler secret put ...)."
 fi

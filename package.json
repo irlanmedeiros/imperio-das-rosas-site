@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "tsx scripts/migrar.ts && next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
@@ -14,7 +14,10 @@
     "admin:senha": "tsx scripts/gerar-senha-admin.ts",
     "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "db:migrar": "tsx scripts/migrar.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",
@@ -24,7 +27,7 @@
     "jose": "^6.2.12",
     "lucide-react": "^1.56.0",
     "motion": "^14.2.0",
-    "next": "^16.4.2",
+    "next": "^16.4.3",
     "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -40,9 +43,10 @@
     "dotenv": "^18.0.7",
     "drizzle-kit": "^0.31.11",
     "eslint": "^9",
-    "eslint-config-next": "^16.4.2",
+    "eslint-config-next": "^16.4.3",
     "tsx": "^4.23.15",
     "typescript": "^5",
+    "vitest": "^3.2.7",
     "wrangler": "^4.151.1"
   },
   "engines": {

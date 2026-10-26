@@ -1,25 +1,24 @@
 "use server";
 
-import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { buscarUsuario } from "@/lib/auth";
 import { COOKIE_SESSAO, criarToken, opcoesCookie } from "@/lib/session";
+import { autenticar } from "@/lib/usuarios";
 
 export type EstadoLogin = { erro?: string };
 
 export async function entrar(_: EstadoLogin, form: FormData): Promise<EstadoLogin> {
-  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  const email = String(form.get("email") ?? "");
   const senha = String(form.get("senha") ?? "");
   const destino = String(form.get("de") ?? "");
-  const emailOk = email === (process.env.ADMIN_EMAIL ?? "").toLowerCase();
-  // compara a senha mesmo com e-mail errado, para não revelar qual dos dois falhou
-  const senhaOk = await bcrypt.compare(senha, process.env.ADMIN_PASSWORD_HASH ?? "$2b$12$invalidinvalidinvalidinvalidinvalidinvalidinvalidinva");
-  if (!emailOk || !senhaOk) {
+  const usuario = await autenticar(email, senha, { email: process.env.ADMIN_EMAIL, hash: process.env.ADMIN_PASSWORD_HASH }, buscarUsuario);
+  if (!usuario) {
     await new Promise((r) => setTimeout(r, 600));
     return { erro: "E-mail ou senha incorretos." };
   }
   const store = await cookies();
-  store.set(COOKIE_SESSAO, await criarToken(email), opcoesCookie);
+  store.set(COOKIE_SESSAO, await criarToken(usuario.email), opcoesCookie);
   redirect(destino.startsWith("/admin") ? destino : "/admin");
 }
 
