@@ -41,9 +41,11 @@ Também funciona com um Postgres local: com `DATABASE_URL` apontando para `local
 |---|---|
 | `npm run dev` / `build` / `start` | desenvolvimento / build / servidor de produção |
 | `npm run lint` · `npm run typecheck` | ESLint · TypeScript |
+| `npm test` | testes unitários (Vitest, pasta `tests/`) |
 | `npm run db:push` | aplica `src/db/schema.ts` no banco |
 | `npm run db:studio` | interface web do banco (Drizzle Studio) |
 | `npm run db:seed` | popula categorias e produtos (idempotente) |
+| `npm run db:migrar` | ajustes de banco que acompanham o código (`scripts/migrar.ts`); roda sozinho antes de todo `npm run build` |
 | `npm run admin:senha -- "senha"` | gera o hash para `ADMIN_PASSWORD_HASH` |
 
 ## Estrutura
@@ -89,6 +91,7 @@ data/                  catálogo inicial exportado do banco
 ## Segurança
 
 - `/admin` protegido em três camadas: `proxy.ts`, `exigirAdmin()` em cada página do painel e em cada Server Action.
+- **Usuários do painel**: a conta principal (`ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH`) é sempre **dono**. O dono cria mais usuários em **Admin → Usuários** (tabela `usuarios`, senha com bcrypt), com papel *dono* (tudo) ou *equipe* (tudo menos Usuários). A cada página o usuário é conferido de novo no banco: removido perde o acesso na hora. Regras em `src/lib/usuarios.ts`.
 - Preços nunca vêm do navegador; checkout tem limites de tamanho e honeypot anti-spam.
 - Upload aceita só imagens, reduzidas no navegador e de novo no servidor (máx. 1600px, JPEG).
 - Cabeçalhos de segurança em `next.config.ts`.

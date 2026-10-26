@@ -37,6 +37,7 @@ export const produtos = pgTable("produtos", {
 export type ItemPedido = { produtoId: number; nome: string; preco: number; qtd: number; foto?: string | null };
 
 import type { StatusPedido } from "@/lib/status";
+import type { Papel } from "@/lib/usuarios";
 export { STATUS_PEDIDO, type StatusPedido } from "@/lib/status";
 
 export const pedidos = pgTable("pedidos", {
@@ -58,6 +59,17 @@ export const pedidos = pgTable("pedidos", {
   criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index("pedidos_status_idx").on(t.status), index("pedidos_criado_em_idx").on(t.criadoEm)]);
 
+/** Usuários do painel criados pelo dono. A conta principal (ADMIN_EMAIL/ADMIN_PASSWORD_HASH) não fica aqui. */
+export const usuarios = pgTable("usuarios", {
+  id: serial("id").primaryKey(),
+  nome: text("nome").notNull(),
+  /** Sempre em minúsculas */
+  email: text("email").notNull().unique(),
+  senhaHash: text("senha_hash").notNull(),
+  papel: text("papel").$type<Papel>().notNull().default("equipe"),
+  criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
 /** Configurações e conteúdo editável, guardados como JSON por chave ("loja", "conteudo"). */
 export const configuracoes = pgTable("configuracoes", {
   chave: text("chave").primaryKey(),
@@ -68,3 +80,4 @@ export const configuracoes = pgTable("configuracoes", {
 export type Categoria = typeof categorias.$inferSelect;
 export type Produto = typeof produtos.$inferSelect;
 export type Pedido = typeof pedidos.$inferSelect;
+export type Usuario = typeof usuarios.$inferSelect;

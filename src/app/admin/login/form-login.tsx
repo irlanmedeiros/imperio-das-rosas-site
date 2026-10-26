@@ -35,7 +35,7 @@ export function FormLogin({ de }: { de: string }) {
               type="button"
               onClick={() => setVer((v) => !v)}
               aria-label={ver ? "Esconder senha" : "Mostrar senha"}
-              style={{ position: "absolute", right: 6, top: 4, width: 38, height: 38, display: "grid", placeItems: "center", color: "var(--muted)" }}
+              style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", width: 44, height: 44, display: "grid", placeItems: "center", color: "var(--muted)" }}
             >
               {ver ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
