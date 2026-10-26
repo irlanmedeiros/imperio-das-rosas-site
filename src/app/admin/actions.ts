@@ -1,6 +1,5 @@
 "use server";
 
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { and, eq, min, ne } from "drizzle-orm";
 import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
@@ -10,7 +9,7 @@ import { buscarUsuario, exigirAdmin, exigirDono } from "@/lib/auth";
 import { conteudoSchema, lojaSchema, type Conteudo, type Loja } from "@/lib/config-types";
 import { TAG_LOJA } from "@/lib/data";
 import { slugify } from "@/lib/format";
-import { tipoImagem } from "@/lib/imagem";
+import { guardarFoto } from "@/lib/fotos";
 import { gerarHash, normalizarEmail, novoUsuarioSchema, PAPEIS, podeRemover, senhaSchema, type NovoUsuario, type Papel } from "@/lib/usuarios";
 
 export type Resultado = { ok: true; id?: number; mensagem?: string } | { ok: false; erro: string };
@@ -30,20 +29,12 @@ export async function enviarImagem(form: FormData): Promise<{ ok: true; url: str
   if (!(arquivo instanceof File) || arquivo.size === 0) return { ok: false, erro: "Nenhuma imagem enviada." };
   if (arquivo.size > 4 * 1024 * 1024) return { ok: false, erro: "Imagem muito grande (máx. 4 MB)." };
   try {
-    const bytes = new Uint8Array(await arquivo.arrayBuffer());
-    const formato = tipoImagem(bytes);
-    if (!formato) return { ok: false, erro: "Use uma foto em JPG, PNG ou WebP." };
     // A foto já chega reduzida pelo navegador (upload-imagem.tsx); aqui só vai para o R2.
-    const nome = slugify(arquivo.name.replace(/\.[^.]+$/, "")) || "foto";
-    const chave = `${pasta}/${nome}-${crypto.randomUUID().slice(0, 8)}.${formato.ext}`;
-    const { env } = await getCloudflareContext({ async: true });
-    await env.FOTOS.put(chave, bytes, {
-      httpMetadata: { contentType: formato.tipo, cacheControl: "public, max-age=31536000, immutable" },
-    });
-    return { ok: true, url: `${process.env.FOTOS_URL_BASE}/${chave}` };
+    const url = await guardarFoto(new Uint8Array(await arquivo.arrayBuffer()), pasta, arquivo.name.replace(/\.[^.]+$/, ""));
+    return { ok: true, url };
   } catch (e) {
     console.error(e);
-    return { ok: false, erro: "Não foi possível enviar a imagem." };
+    return { ok: false, erro: e instanceof Error && e.message.startsWith("Use uma foto") ? e.message : "Não foi possível enviar a imagem." };
   }
 }
 

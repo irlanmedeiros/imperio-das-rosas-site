@@ -91,6 +91,7 @@ data/                  catálogo inicial exportado do banco
 ## Segurança
 
 - `/admin` protegido em três camadas: `proxy.ts`, `exigirAdmin()` em cada página do painel e em cada Server Action.
+- **Importar planilha** (Admin → Produtos → Importar planilha): cadastra/atualiza vários produtos de uma vez a partir de um .xlsx (Excel/Google Planilhas) ou .csv. Produto com o mesmo nome é atualizado; os demais são criados; categorias novas são criadas; célula vazia não muda nada; nada é apagado. Links de foto externos são copiados para o R2. Leitor sem dependências em `src/lib/planilha.ts`, regras em `src/lib/importacao.ts`.
 - **Usuários do painel**: a conta principal (`ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH`) é sempre **dono**. O dono cria mais usuários em **Admin → Usuários** (tabela `usuarios`, senha com bcrypt), com papel *dono* (tudo) ou *equipe* (tudo menos Usuários). A cada página o usuário é conferido de novo no banco: removido perde o acesso na hora. Regras em `src/lib/usuarios.ts`.
 - Preços nunca vêm do navegador; checkout tem limites de tamanho e honeypot anti-spam.
 - Upload aceita só imagens, reduzidas no navegador e de novo no servidor (máx. 1600px, JPEG).

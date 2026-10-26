@@ -659,6 +659,101 @@
   }
 }
 
+/* importar planilha (mobile first) */
+.adm-topo-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.importar-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.importar-botoes .btn {
+  max-width: 100%;
+  white-space: normal; /* em telas de 320px o texto quebra em vez de vazar */
+  text-align: left;
+}
+.importar-dica {
+  display: block;
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.importar-area {
+  aspect-ratio: auto;
+  min-height: 150px;
+  padding: 24px 16px;
+  margin-top: 12px;
+  align-content: center;
+  gap: 6px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.importar-area svg {
+  width: 30px;
+  height: 30px;
+  color: var(--sage);
+}
+.importar-area small {
+  color: var(--muted);
+}
+.importar-resumo {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+.importar-resumo li {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.importar-resumo strong {
+  display: block;
+  font-size: 22px;
+  color: var(--forest);
+}
+.importar-resumo .com-erro strong {
+  color: var(--danger);
+}
+.importar-erros {
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+  font-size: 13px;
+  color: var(--danger);
+}
+.importar-erros li {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+.importar-erros svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.importar-previa {
+  margin-top: 12px;
+  max-height: 420px;
+  overflow: auto;
+}
+.importar-ok h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ok);
+}
+.importar-ok .btn {
+  margin-top: 12px;
+}
+
 @media (max-width: 1000px) {
   .stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));

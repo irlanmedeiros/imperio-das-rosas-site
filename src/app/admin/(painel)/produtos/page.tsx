@@ -1,6 +1,6 @@
 import { exigirAdmin } from "@/lib/auth";
 import { asc } from "drizzle-orm";
-import { Plus } from "lucide-react";
+import { FileSpreadsheet, Plus } from "lucide-react";
 import Link from "next/link";
 import { db, schema } from "@/db";
 import { ListaProdutos } from "@/components/admin/lista-produtos";
@@ -22,9 +22,14 @@ export default async function ProdutosAdmin() {
             {produtos.length} cadastrados · {produtos.filter((p) => p.ativo).length} visíveis no site
           </p>
         </div>
-        <Link href="/admin/produtos/novo" className="btn btn-primary btn-sm">
-          <Plus /> Novo produto
-        </Link>
+        <div className="adm-topo-acoes">
+          <Link href="/admin/produtos/importar" className="btn btn-outline btn-sm">
+            <FileSpreadsheet /> Importar planilha
+          </Link>
+          <Link href="/admin/produtos/novo" className="btn btn-primary btn-sm">
+            <Plus /> Novo produto
+          </Link>
+        </div>
       </div>
       <ListaProdutos produtos={produtos} categorias={categorias} />
     </>
