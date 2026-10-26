@@ -425,6 +425,18 @@
 .secao-topo.esquerda .ornamento::before {
   display: none;
 }
+/* celulares bem estreitos (320px): "@imperiodasrosaspb" não cabia com o espaçamento cheio */
+@media (max-width: 400px) {
+  .ornamento {
+    max-width: 100%;
+    gap: 8px;
+    letter-spacing: 2.5px;
+  }
+  .ornamento::before,
+  .ornamento::after {
+    width: 20px;
+  }
+}
 .secao-acao {
   display: flex;
   justify-content: center;
