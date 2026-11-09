@@ -97,6 +97,24 @@ data/                  catálogo inicial exportado do banco
 - Upload aceita só imagens, reduzidas no navegador e de novo no servidor (máx. 1600px, JPEG).
 - Cabeçalhos de segurança em `next.config.ts`.
 
+## Pagamento online (Asaas)
+
+Fluxo: o pedido chega pelo site → no painel (**Pedidos → pedido**) o atendente informa a taxa de entrega e clica em **Gerar link de pagamento** → envia o link ao cliente pelo botão do WhatsApp → o cliente paga por Pix, cartão ou boleto na página do Asaas → o Asaas chama o webhook `POST /api/asaas/webhook` → a cobrança fica **Paga** e o pedido **Novo** vira **Confirmado**. O cliente vê "Pagamento confirmado" na página do pedido.
+
+- Código: `src/lib/asaas.ts` (API), `src/lib/pagamento.ts` (regras, testadas), `src/app/api/asaas/webhook/route.ts`, `src/app/admin/(painel)/pedidos/[id]/actions.ts`, `src/components/admin/cobranca-pedido.tsx`.
+- Tabelas `cobrancas` e `asaas_eventos`: criadas sozinhas no primeiro uso (`garantirTabelasPagamento`) e também por `npm run db:migrar`.
+- O webhook confere o header `asaas-access-token`, ignora eventos repetidos (`asaas_eventos`) e nunca desfaz um pagamento por evento atrasado (só estorno tira o "Pago").
+
+**Configuração em produção** (Cloudflare → Workers & Pages → `imperio-das-rosas-site` → Settings → Variables and Secrets, tipo *Secret*):
+
+| Nome | Valor |
+|---|---|
+| `ASAAS_API_KEY` | chave da API de produção do Asaas (`$aact_prod_...`) |
+| `ASAAS_WEBHOOK_TOKEN` | o token do webhook (32+ caracteres) |
+| `ASAAS_AMBIENTE` | `producao` (opcional; `sandbox` para testes) |
+
+**No Asaas** (Menu do usuário → Integrações → Webhooks → Criar webhook): URL `https://imperiodasrosas.com/api/asaas/webhook`, versão da API v3, *Auth token* = o mesmo `ASAAS_WEBHOOK_TOKEN`, envio sequencial, eventos de **Cobranças** (no mínimo `PAYMENT_CONFIRMED`, `PAYMENT_RECEIVED`, `PAYMENT_OVERDUE`, `PAYMENT_REFUNDED`, `PAYMENT_DELETED`). Logs de entrega: Integrações → Logs de Webhooks.
+
 ## Deploy na Cloudflare (Workers)
 
 O site roda no Cloudflare Workers via [OpenNext](https://opennext.js.org/cloudflare) (`wrangler.jsonc`, `open-next.config.ts`). Fotos no R2 (`fotos.imperiodasrosas.com`), cache das páginas no R2 e tags de revalidação no D1.

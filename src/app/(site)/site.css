@@ -1760,3 +1760,14 @@
     bottom: 84px;
   }
 }
+
+/* aviso de pagamento confirmado na página do pedido */
+.aviso-pago {
+  max-width: 460px;
+  margin: 0 auto 22px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: #e5f1e1;
+  color: #3f7a34;
+  font-weight: 600;
+}

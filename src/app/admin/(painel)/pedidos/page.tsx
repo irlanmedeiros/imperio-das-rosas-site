@@ -1,9 +1,10 @@
 import { exigirAdmin } from "@/lib/auth";
-import { count, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { db, schema } from "@/db";
 import { STATUS_PEDIDO, type StatusPedido } from "@/db/schema";
 import { ROTULO_STATUS, TabelaPedidos } from "@/components/admin/tabela-pedidos";
+import { asaasConfigurado, garantirTabelasPagamento } from "@/lib/asaas";
 
 export const metadata = { title: "Pedidos" };
 
@@ -20,6 +21,15 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
       .limit(200),
     db.select({ status: schema.pedidos.status, n: count() }).from(schema.pedidos).groupBy(schema.pedidos.status),
   ]);
+  let pagos: number[] = [];
+  if (asaasConfigurado() && pedidos.length) {
+    await garantirTabelasPagamento();
+    const linhas = await db
+      .selectDistinct({ id: schema.cobrancas.pedidoId })
+      .from(schema.cobrancas)
+      .where(and(eq(schema.cobrancas.status, "pago"), inArray(schema.cobrancas.pedidoId, pedidos.map((p) => p.id))));
+    pagos = linhas.map((l) => l.id);
+  }
   const n = (s: string) => contagem.find((c) => c.status === s)?.n ?? 0;
   const total = contagem.reduce((s, c) => s + c.n, 0);
 
@@ -41,7 +51,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
           </Link>
         ))}
       </div>
-      <TabelaPedidos pedidos={pedidos} />
+      <TabelaPedidos pedidos={pedidos} pagos={pagos} />
     </>
   );
 }

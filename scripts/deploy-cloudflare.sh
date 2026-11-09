@@ -52,8 +52,8 @@ npx opennextjs-cloudflare deploy
 
 echo "→ Gravando as variáveis secretas no Worker"
 node -e '
-  const v = ["DATABASE_URL", "AUTH_SECRET", "ADMIN_EMAIL", "ADMIN_PASSWORD_HASH"].filter((k) => process.env[k]);
+  const v = ["DATABASE_URL", "AUTH_SECRET", "ADMIN_EMAIL", "ADMIN_PASSWORD_HASH", "ASAAS_API_KEY", "ASAAS_WEBHOOK_TOKEN", "ASAAS_AMBIENTE"].filter((k) => process.env[k]);
   process.stdout.write(JSON.stringify(Object.fromEntries(v.map((k) => [k, process.env[k]]))));
-' | DATABASE_URL="$DATABASE_URL" AUTH_SECRET="$AUTH_SECRET" ADMIN_EMAIL="${ADMIN_EMAIL:-}" ADMIN_PASSWORD_HASH="${ADMIN_PASSWORD_HASH:-}" npx wrangler secret bulk
+' | DATABASE_URL="$DATABASE_URL" AUTH_SECRET="$AUTH_SECRET" ADMIN_EMAIL="${ADMIN_EMAIL:-}" ADMIN_PASSWORD_HASH="${ADMIN_PASSWORD_HASH:-}" ASAAS_API_KEY="${ASAAS_API_KEY:-}" ASAAS_WEBHOOK_TOKEN="${ASAAS_WEBHOOK_TOKEN:-}" ASAAS_AMBIENTE="${ASAAS_AMBIENTE:-}" npx wrangler secret bulk
 
 echo "✅ Publicado. Endereço do Worker: veja a linha 'workers.dev' acima."

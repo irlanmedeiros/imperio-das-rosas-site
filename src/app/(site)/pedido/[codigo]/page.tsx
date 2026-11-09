@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { Check } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { db, schema } from "@/db";
 import { Revelar } from "@/components/revelar";
 import { EnviarWhatsApp } from "@/components/site/enviar-whatsapp";
+import { asaasConfigurado, garantirTabelasPagamento } from "@/lib/asaas";
 import { getLoja } from "@/lib/data";
 import { brl, dataBR } from "@/lib/format";
 import { linkWhatsApp, mensagemPedido } from "@/lib/whatsapp";
@@ -13,14 +14,24 @@ import { linkWhatsApp, mensagemPedido } from "@/lib/whatsapp";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Pedido registrado", robots: { index: false } };
 
-export default async function PedidoPage({ params, searchParams }: { params: Promise<{ codigo: string }>; searchParams: Promise<{ novo?: string }> }) {
-  const [{ codigo }, { novo }] = await Promise.all([params, searchParams]);
+export default async function PedidoPage({ params, searchParams }: { params: Promise<{ codigo: string }>; searchParams: Promise<{ novo?: string; pago?: string }> }) {
+  const [{ codigo }, { novo, pago: voltouDoPagamento }] = await Promise.all([params, searchParams]);
   if (!/^IR-[A-Z0-9]{6}$/.test(codigo)) notFound();
   const [[pedido], loja] = await Promise.all([
     db.select().from(schema.pedidos).where(eq(schema.pedidos.codigo, codigo)),
     getLoja(),
   ]);
   if (!pedido) notFound();
+  let pago = false;
+  if (asaasConfigurado()) {
+    await garantirTabelasPagamento();
+    const [c] = await db
+      .select({ id: schema.cobrancas.id })
+      .from(schema.cobrancas)
+      .where(and(eq(schema.cobrancas.pedidoId, pedido.id), eq(schema.cobrancas.status, "pago")))
+      .limit(1);
+    pago = Boolean(c);
+  }
   const url = linkWhatsApp(loja.whatsapp, mensagemPedido(pedido));
 
   return (
@@ -36,6 +47,11 @@ export default async function PedidoPage({ params, searchParams }: { params: Pro
             Seu pedido já está com a gente. Envie a mensagem pronta para a loja confirmar a entrega e o pagamento.
           </p>
           <div className="codigo">{pedido.codigo}</div>
+          {(pago || voltouDoPagamento === "1") && (
+            <p className="aviso-pago" role="status">
+              {pago ? "Pagamento confirmado. Obrigado! 🌹" : "Recebemos o seu pagamento e estamos confirmando. Você recebe a confirmação pelo WhatsApp."}
+            </p>
+          )}
           <EnviarWhatsApp url={url} automatico={novo === "1"} />
         </Revelar>
         <Revelar className="passo" atraso={0.15}>

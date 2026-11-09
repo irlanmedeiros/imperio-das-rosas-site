@@ -38,6 +38,7 @@ export type ItemPedido = { produtoId: number; nome: string; preco: number; qtd: 
 
 import type { StatusPedido } from "@/lib/status";
 import type { Papel } from "@/lib/usuarios";
+import type { StatusCobranca } from "@/lib/pagamento";
 export { STATUS_PEDIDO, type StatusPedido } from "@/lib/status";
 
 export const pedidos = pgTable("pedidos", {
@@ -70,6 +71,30 @@ export const usuarios = pgTable("usuarios", {
   criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/** Links de pagamento do Asaas gerados para um pedido (um pedido pode ter mais de um: ex. taxa corrigida). */
+export const cobrancas = pgTable("cobrancas", {
+  id: serial("id").primaryKey(),
+  pedidoId: integer("pedido_id").notNull().references(() => pedidos.id, { onDelete: "cascade" }),
+  asaasLinkId: text("asaas_link_id").notNull().unique(),
+  url: text("url").notNull(),
+  /** Produtos + taxa de entrega, em centavos */
+  valor: integer("valor").notNull(),
+  taxaEntrega: integer("taxa_entrega").notNull().default(0),
+  status: text("status").$type<StatusCobranca>().notNull().default("pendente"),
+  asaasPagamentoId: text("asaas_pagamento_id"),
+  forma: text("forma"),
+  pagoEm: timestamp("pago_em", { withTimezone: true }),
+  criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
+  atualizadoEm: timestamp("atualizado_em", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("cobrancas_pedido_idx").on(t.pedidoId)]);
+
+/** Eventos de webhook do Asaas já processados (o Asaas pode reenviar o mesmo evento). */
+export const asaasEventos = pgTable("asaas_eventos", {
+  id: text("id").primaryKey(),
+  evento: text("evento").notNull(),
+  recebidoEm: timestamp("recebido_em", { withTimezone: true }).notNull().defaultNow(),
+});
+
 /** Configurações e conteúdo editável, guardados como JSON por chave ("loja", "conteudo"). */
 export const configuracoes = pgTable("configuracoes", {
   chave: text("chave").primaryKey(),
@@ -81,3 +106,4 @@ export type Categoria = typeof categorias.$inferSelect;
 export type Produto = typeof produtos.$inferSelect;
 export type Pedido = typeof pedidos.$inferSelect;
 export type Usuario = typeof usuarios.$inferSelect;
+export type Cobranca = typeof cobrancas.$inferSelect;

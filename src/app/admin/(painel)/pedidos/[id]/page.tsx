@@ -1,11 +1,13 @@
 import { exigirAdmin } from "@/lib/auth";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db, schema } from "@/db";
+import { CobrancaPedido } from "@/components/admin/cobranca-pedido";
 import { MudarStatus } from "@/components/admin/mudar-status";
+import { asaasConfigurado, garantirTabelasPagamento } from "@/lib/asaas";
 import { SeloStatus } from "@/components/admin/tabela-pedidos";
 import { WhatsAppIcone } from "@/components/icones";
 import { brl, dataBR, soDigitos } from "@/lib/format";
@@ -23,6 +25,12 @@ export default async function PedidoAdmin({ params }: { params: Promise<{ id: st
   if (!p) notFound();
   const fone = soDigitos(p.clienteTelefone);
   const foneWhats = fone.length <= 11 ? `55${fone}` : fone;
+  const configurado = asaasConfigurado();
+  const cobrancas = configurado
+    ? await garantirTabelasPagamento().then(() =>
+        db.select().from(schema.cobrancas).where(eq(schema.cobrancas.pedidoId, p.id)).orderBy(desc(schema.cobrancas.criadoEm)),
+      )
+    : [];
 
   return (
     <>
@@ -57,6 +65,20 @@ export default async function PedidoAdmin({ params }: { params: Promise<{ id: st
               <strong style={{ color: "var(--forest)" }}>{brl(p.total)}</strong>
             </div>
           </div>
+          <CobrancaPedido
+            configurado={configurado}
+            pedido={{ id: p.id, codigo: p.codigo, clienteNome: p.clienteNome, total: p.total, tipoEntrega: p.tipoEntrega, status: p.status, foneWhats }}
+            cobrancas={cobrancas.map((c) => ({
+              id: c.id,
+              url: c.url,
+              valor: c.valor,
+              taxaEntrega: c.taxaEntrega,
+              status: c.status,
+              forma: c.forma,
+              pagoEm: c.pagoEm?.toISOString() ?? null,
+              criadoEm: c.criadoEm.toISOString(),
+            }))}
+          />
           <div className="cartao">
             <h2>Status</h2>
             <p>O cliente não é avisado automaticamente: use o botão do WhatsApp para falar com ele.</p>

@@ -11,7 +11,8 @@ export function SeloStatus({ status }: { status: StatusPedido }) {
 
 const quando = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Recife", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
-export function TabelaPedidos({ pedidos }: { pedidos: Pedido[] }) {
+export function TabelaPedidos({ pedidos, pagos = [] }: { pedidos: Pedido[]; pagos?: number[] }) {
+  const pago = new Set(pagos);
   if (pedidos.length === 0) {
     return (
       <div className="cartao" style={{ textAlign: "center", color: "var(--muted)", padding: 40 }}>
@@ -55,6 +56,7 @@ export function TabelaPedidos({ pedidos }: { pedidos: Pedido[] }) {
               <td style={{ fontWeight: 600 }}>{brl(p.total)}</td>
               <td>
                 <SeloStatus status={p.status} />
+                {pago.has(p.id) && <span className="selo-cobranca selo-pago" style={{ marginLeft: 6 }}>Pago</span>}
               </td>
             </tr>
           ))}
