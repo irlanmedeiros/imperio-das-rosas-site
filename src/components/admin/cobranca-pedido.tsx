@@ -13,6 +13,7 @@ type Cobranca = { id: number; url: string; valor: number; taxaEntrega: number; s
 type Pedido = { id: number; codigo: string; clienteNome: string; total: number; tipoEntrega: "entrega" | "retirada"; status: string; foneWhats: string };
 
 const quando = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Recife", dateStyle: "short", timeStyle: "short" });
+const dia = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Recife", dateStyle: "short" });
 
 export function CobrancaPedido({ pedido, cobrancas, configurado }: { pedido: Pedido; cobrancas: Cobranca[]; configurado: boolean }) {
   const router = useRouter();
@@ -100,7 +101,7 @@ export function CobrancaPedido({ pedido, cobrancas, configurado }: { pedido: Ped
               </div>
               <small>
                 {c.taxaEntrega ? `Produtos ${brl(c.valor - c.taxaEntrega)} + entrega ${brl(c.taxaEntrega)}` : "Sem taxa de entrega"} · gerado em {quando.format(new Date(c.criadoEm))}
-                {c.status === "pago" && c.pagoEm && ` · pago em ${quando.format(new Date(c.pagoEm)).split(" ")[0]}`}
+                {c.status === "pago" && c.pagoEm && ` · pago em ${dia.format(new Date(c.pagoEm))}`}
                 {c.forma && ` · ${rotuloForma(c.forma)}`}
               </small>
               {c.status === "pendente" && (
