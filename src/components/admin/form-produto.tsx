@@ -7,6 +7,7 @@ import { useState, useTransition } from "react";
 import { excluirProduto, salvarProduto } from "@/app/admin/actions";
 import type { Categoria, Produto } from "@/db/schema";
 import { centavosParaInput, parsePreco } from "@/lib/format";
+import { opcoesCategoria } from "@/lib/categorias";
 import { UploadImagem } from "./upload-imagem";
 
 export function FormProduto({ produto, categorias }: { produto: Produto | null; categorias: Categoria[] }) {
@@ -79,9 +80,9 @@ export function FormProduto({ produto, categorias }: { produto: Produto | null; 
                 <span>Categoria</span>
                 <select className="input" value={f.categoriaId} onChange={(e) => setF({ ...f, categoriaId: e.target.value })}>
                   <option value="">Sem categoria</option>
-                  {categorias.map((c) => (
+                  {opcoesCategoria(categorias).map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.nome}
+                      {c.rotulo}
                     </option>
                   ))}
                 </select>

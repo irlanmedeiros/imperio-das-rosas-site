@@ -85,7 +85,10 @@ data/                  catálogo inicial exportado do banco
 - **Páginas públicas são estáticas** (CDN). Os dados vêm de `src/lib/data.ts`, cacheados com a tag `loja`.
 - Toda alteração no admin chama `atualizarSite()` (`src/app/admin/actions.ts`): `updateTag("loja")` + `revalidatePath("/", "layout")`. O site reflete a mudança na próxima visita.
 - Mudou os **textos padrão** em `config-types.ts` ou o formato dos dados? Altere `VERSAO_CACHE` em `data.ts` — o cache da Vercel sobrevive entre deploys.
-- **Pedido**: carrinho (navegador) → `criarPedido` valida com zod, busca preços no banco, grava em `pedidos` → página `/pedido/IR-XXXXXX` monta a mensagem e abre o WhatsApp da loja. Não há pagamento online; é combinado no WhatsApp.
+- **Pedido**: carrinho (navegador) → `criarPedido` valida com zod, busca preços e a taxa do bairro no servidor, grava em `pedidos` → se o pagamento no site estiver ligado, o cliente vai para o link do Asaas (status *Aguardando pagamento*); pago, o webhook confirma o pedido e `/pedido/IR-XXXXXX` mostra "Pago!" e abre o WhatsApp com a mensagem já dizendo que foi pago. Sem Asaas, sem taxa conhecida para o bairro ou se o Asaas falhar, vai direto para o WhatsApp como antes.
+- **Categorias e subcategorias**: dois níveis (`categorias.pai_id`, ex.: Buquês › Rosas). O catálogo mostra as principais e, ao escolher uma, os botões das subcategorias. Regras em `src/lib/categorias.ts`.
+- **Ordem dos produtos**: Admin → Produtos → *Organizar ordem* (por categoria ou todos; setas, posição digitada ou "mais baratos primeiro"). Vale para "Mais relevantes" no catálogo e para os carrosséis. Regras em `src/lib/ordem.ts`.
+- **Colunas/tabelas novas** entram sozinhas no primeiro uso (`garantirEsquema` em `src/db/esquema.ts`), porque o build da Cloudflare roda sem banco; `npm run db:migrar` faz o mesmo.
 - **Configurações e conteúdo** (WhatsApp, horário, textos, banners, ocasiões, depoimentos) ficam em `configuracoes` como JSON validado por zod, com os padrões de `config-types.ts`.
 
 ## Segurança
@@ -99,7 +102,10 @@ data/                  catálogo inicial exportado do banco
 
 ## Pagamento online (Asaas)
 
-Fluxo: o pedido chega pelo site → no painel (**Pedidos → pedido**) o atendente informa a taxa de entrega e clica em **Gerar link de pagamento** → envia o link ao cliente pelo botão do WhatsApp → o cliente paga por Pix, cartão ou boleto na página do Asaas → o Asaas chama o webhook `POST /api/asaas/webhook` → a cobrança fica **Paga** e o pedido **Novo** vira **Confirmado**. O cliente vê "Pagamento confirmado" na página do pedido.
+Dois caminhos, os dois terminam no webhook `POST /api/asaas/webhook` (cobrança **Paga**, pedido **Confirmado**):
+
+1. **No checkout (padrão)**: o cliente escolhe o bairro (lista de taxas em **Configurações → Pagamento no site e taxas de entrega**), vê o total e clica em **Ir para o pagamento** → paga no Asaas → volta para `/pedido/<código>?pago=1`, que espera a confirmação e abre o WhatsApp com o pedido já pago. Se ele sair sem pagar, a página do pedido tem **Pagar** (reabre ou gera outro link). Desligue em Configurações para voltar ao fluxo só pelo WhatsApp.
+2. **Pelo painel**: em **Pedidos → pedido** o atendente informa a taxa e clica em **Gerar link de pagamento** → envia ao cliente pelo WhatsApp.
 
 - Código: `src/lib/asaas.ts` (API), `src/lib/pagamento.ts` (regras, testadas), `src/app/api/asaas/webhook/route.ts`, `src/app/admin/(painel)/pedidos/[id]/actions.ts`, `src/components/admin/cobranca-pedido.tsx`.
 - Tabelas `cobrancas` e `asaas_eventos`: criadas sozinhas no primeiro uso (`garantirTabelasPagamento`) e também por `npm run db:migrar`.

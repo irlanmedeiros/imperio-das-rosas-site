@@ -40,7 +40,7 @@ export function Catalogo({
   const lista = useMemo(() => {
     const termos = normalizar(buscaAdiada).split(/\s+/).filter(Boolean);
     const r = produtos.filter(
-      (p) => (cat === "todos" || p.categoria === cat) && termos.every((t) => normalizar(p.nome).includes(t)),
+      (p) => (cat === "todos" || p.categoria === cat || p.subcategoria === cat) && termos.every((t) => normalizar(p.nome).includes(t)),
     );
     if (ordem === "menor") r.sort((a, b) => a.preco - b.preco);
     if (ordem === "maior") r.sort((a, b) => b.preco - a.preco);
@@ -49,6 +49,12 @@ export function Catalogo({
   }, [produtos, cat, buscaAdiada, ordem]);
 
   const chips = [{ slug: "todos", nome: "Todos", total: produtos.length }, ...categorias];
+  // categoria principal ativa (a própria, ou a "mãe" quando uma subcategoria está escolhida)
+  const principal = categorias.find((c) => c.slug === cat || c.subs.some((s) => s.slug === cat));
+  const escolher = (slug: string) => {
+    setCat(slug);
+    setLimite(PASSO);
+  };
 
   return (
     <>
@@ -60,14 +66,11 @@ export function Catalogo({
                 <button
                   key={c.slug}
                   role="tab"
-                  aria-selected={cat === c.slug}
-                  className={`chip${cat === c.slug ? " ativo" : ""}`}
-                  onClick={() => {
-                    setCat(c.slug);
-                    setLimite(PASSO);
-                  }}
+                  aria-selected={(principal?.slug ?? cat) === c.slug}
+                  className={`chip${(principal?.slug ?? cat) === c.slug ? " ativo" : ""}`}
+                  onClick={() => escolher(c.slug)}
                 >
-                  {cat === c.slug && <motion.span layoutId="chip-fundo" className="chip-fundo" transition={{ type: "spring", stiffness: 420, damping: 34 }} />}
+                  {(principal?.slug ?? cat) === c.slug && <motion.span layoutId="chip-fundo" className="chip-fundo" transition={{ type: "spring", stiffness: 420, damping: 34 }} />}
                   <span>
                     {c.nome}
                     <small>{c.total}</small>
@@ -101,6 +104,16 @@ export function Catalogo({
             <option value="az">Nome (A–Z)</option>
           </select>
         </div>
+        {principal && principal.subs.length > 0 && (
+          <div className="subchips" role="tablist" aria-label={`Tipos de ${principal.nome}`}>
+            {[{ slug: principal.slug, nome: "Todos", total: principal.total }, ...principal.subs].map((s) => (
+              <button key={s.slug} role="tab" aria-selected={cat === s.slug} className={`subchip${cat === s.slug ? " ativo" : ""}`} onClick={() => escolher(s.slug)}>
+                {s.nome}
+                <small>{s.total}</small>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <p className="resultado-info" aria-live="polite">

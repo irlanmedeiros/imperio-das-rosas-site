@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { garantirTabelasPagamento } from "@/lib/asaas";
 import { pedidoDaReferencia, podeMudarStatus, statusPorEvento, tokenConfere } from "@/lib/pagamento";
@@ -57,8 +57,11 @@ export async function POST(request: Request) {
           })
           .where(eq(schema.cobrancas.id, cobranca.id));
         if (novo === "pago") {
-          // pedido "novo" pago vira "confirmado"; outros status (já em preparo etc.) ficam como estão
-          await db.update(schema.pedidos).set({ status: "confirmado" }).where(and(eq(schema.pedidos.id, cobranca.pedidoId), eq(schema.pedidos.status, "novo")));
+          // pedido "novo" ou "aguardando pagamento" (checkout do site) vira "confirmado"; os já em preparo etc. ficam como estão
+          await db
+            .update(schema.pedidos)
+            .set({ status: "confirmado" })
+            .where(and(eq(schema.pedidos.id, cobranca.pedidoId), inArray(schema.pedidos.status, ["novo", "pagamento"])));
         }
       }
     }

@@ -1,12 +1,12 @@
 import { Clock, Gift, PenLine, Truck } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Flor } from "@/components/icones";
 import { Revelar } from "@/components/revelar";
 import { Carrossel } from "@/components/site/carrossel";
 import { AcoesProduto } from "@/components/site/acoes-produto";
+import { FotoProduto } from "@/components/site/foto-produto";
 import { Preco } from "@/components/site/produto-card";
 import { getCatalogo, getLoja, getProduto } from "@/lib/data";
 import { brl } from "@/lib/format";
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProdutoPage({ params }: Props) {
   const [r, loja] = await Promise.all([getProduto((await params).slug), getLoja()]);
   if (!r) notFound();
-  const { produto: p, relacionados, categoria } = r;
+  const { produto: p, relacionados, categoria, subcategoria } = r;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -57,17 +57,22 @@ export default async function ProdutoPage({ params }: Props) {
                 /<Link href={`/catalogo?categoria=${categoria.slug}`}>{categoria.nome}</Link>
               </>
             )}
+            {subcategoria && (
+              <>
+                /<Link href={`/catalogo?categoria=${subcategoria.slug}`}>{subcategoria.nome}</Link>
+              </>
+            )}
           </nav>
           <div className="pdp">
             <Revelar className="pdp-foto">
               {p.foto ? (
-                <Image src={p.foto} alt={p.nome} fill preload fetchPriority="high" sizes="(max-width: 900px) 100vw, 50vw" />
+                <FotoProduto src={p.foto} alt={p.nome} />
               ) : (
                 <Flor style={{ position: "absolute", inset: 0, margin: "auto", width: 90, color: "var(--sage)" }} />
               )}
             </Revelar>
             <Revelar atraso={0.1}>
-              {categoria && <span className="pdp-categoria">{categoria.nome}</span>}
+              {categoria && <span className="pdp-categoria">{subcategoria ? `${categoria.nome} · ${subcategoria.nome}` : categoria.nome}</span>}
               <h1>{p.nome}</h1>
               <div className="pdp-preco">
                 <Preco p={p} />

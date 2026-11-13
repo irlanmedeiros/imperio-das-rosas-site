@@ -4,23 +4,10 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db, schema } from "@/db";
 import { exigirAdmin } from "@/lib/auth";
-import { asaasConfigurado, criarLinkPagamento, ErroAsaas, garantirTabelasPagamento, removerLinkPagamento } from "@/lib/asaas";
-import { corpoLinkPagamento } from "@/lib/pagamento";
+import { asaasConfigurado, ErroAsaas, garantirTabelasPagamento } from "@/lib/asaas";
+import { cancelarLink, criarCobranca } from "@/lib/cobranca";
 
 type Resultado = { ok: true; url?: string } | { ok: false; erro: string };
-
-const URL_SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://imperiodasrosas.com";
-
-/** Cancela no Asaas e marca como cancelado (link que não deve mais ser pago). */
-async function cancelarLink(cobranca: { id: number; asaasLinkId: string }) {
-  try {
-    await removerLinkPagamento(cobranca.asaasLinkId);
-  } catch (e) {
-    // link já removido no painel do Asaas: segue e marca como cancelado
-    if (!(e instanceof ErroAsaas) || !/404|not found|não encontrad/i.test(e.message)) throw e;
-  }
-  await db.update(schema.cobrancas).set({ status: "cancelado", atualizadoEm: new Date() }).where(eq(schema.cobrancas.id, cobranca.id));
-}
 
 /** Gera o link de pagamento do pedido (produtos + taxa). Links pendentes anteriores são cancelados. */
 export async function gerarCobranca(pedidoId: number, taxaEntrega: number): Promise<Resultado> {
@@ -36,10 +23,9 @@ export async function gerarCobranca(pedidoId: number, taxaEntrega: number): Prom
     if (cobrancas.some((c) => c.status === "pago")) return { ok: false, erro: "Este pedido já foi pago." };
 
     for (const c of cobrancas.filter((c) => c.status === "pendente")) await cancelarLink(c);
-    const link = await criarLinkPagamento(corpoLinkPagamento(pedido, taxaEntrega, URL_SITE));
-    await db.insert(schema.cobrancas).values({ pedidoId, asaasLinkId: link.id, url: link.url, valor: pedido.total + taxaEntrega, taxaEntrega });
+    const url = await criarCobranca(pedido, taxaEntrega);
     revalidatePath(`/admin/pedidos/${pedidoId}`);
-    return { ok: true, url: link.url };
+    return { ok: true, url };
   } catch (e) {
     console.error("gerarCobranca:", e);
     return { ok: false, erro: e instanceof ErroAsaas ? e.message : "Não foi possível gerar o link agora. Tente de novo." };

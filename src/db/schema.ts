@@ -1,4 +1,5 @@
 import {
+  type AnyPgColumn,
   boolean,
   index,
   integer,
@@ -14,6 +15,8 @@ export const categorias = pgTable("categorias", {
   slug: text("slug").notNull().unique(),
   nome: text("nome").notNull(),
   ordem: integer("ordem").notNull().default(0),
+  /** Categoria principal (ex.: Buquês) quando esta é uma subcategoria (ex.: Rosas). Só dois níveis. */
+  paiId: integer("pai_id").references((): AnyPgColumn => categorias.id, { onDelete: "set null" }),
 });
 
 export const produtos = pgTable("produtos", {

@@ -10,7 +10,8 @@ export const metadata: Metadata = {
 
 export default async function CatalogoPage({ searchParams }: { searchParams: Promise<{ categoria?: string; q?: string }> }) {
   const [{ categoria, q }, { produtos, categorias }] = await Promise.all([searchParams, getCatalogo()]);
-  const catInicial = categorias.some((c) => c.slug === categoria) ? categoria! : "todos";
+  const valida = categorias.some((c) => c.slug === categoria || c.subs.some((s) => s.slug === categoria));
+  const catInicial = valida ? categoria! : "todos";
 
   return (
     <section className="secao" style={{ paddingTop: 48 }}>

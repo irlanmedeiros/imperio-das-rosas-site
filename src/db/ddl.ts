@@ -1,6 +1,6 @@
 /**
  * SQL idempotente das tabelas criadas depois do primeiro deploy. Usado por scripts/migrar.ts (build com
- * banco) e na hora do uso (garantirTabelasPagamento), porque o build automático da Cloudflare roda sem banco.
+ * banco) e na hora do uso (garantirEsquema em src/db/esquema.ts), porque o build automático da Cloudflare roda sem banco.
  */
 export const DDL_USUARIOS = `CREATE TABLE IF NOT EXISTS "usuarios" (
   "id" serial PRIMARY KEY NOT NULL,
@@ -35,3 +35,13 @@ export const DDL_PAGAMENTO = [
   "recebido_em" timestamp with time zone DEFAULT now() NOT NULL
 )`,
 ];
+
+/** Subcategorias (ex.: Buquês › Rosas). Só altera a tabela se a coluna ainda não existir (sem trava à toa). */
+export const DDL_CATEGORIAS = `DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'categorias' AND column_name = 'pai_id') THEN
+    ALTER TABLE "categorias" ADD COLUMN "pai_id" integer REFERENCES "categorias"("id") ON DELETE SET NULL;
+  END IF;
+END $$`;
+
+/** Tudo o que veio depois do primeiro deploy, na ordem em que deve rodar. */
+export const DDL_TUDO = [{ nome: "tabela usuarios (aba Usuários do painel)", sql: DDL_USUARIOS }, ...DDL_PAGAMENTO.map((sql, i) => ({ nome: `pagamentos Asaas (${i + 1}/${DDL_PAGAMENTO.length})`, sql })), { nome: "subcategorias (categorias.pai_id)", sql: DDL_CATEGORIAS }];

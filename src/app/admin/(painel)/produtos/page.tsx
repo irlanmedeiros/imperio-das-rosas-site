@@ -11,7 +11,7 @@ export default async function ProdutosAdmin() {
   await exigirAdmin();
   const [produtos, categorias] = await Promise.all([
     db.select().from(schema.produtos).orderBy(asc(schema.produtos.ordem), asc(schema.produtos.id)),
-    db.select().from(schema.categorias).orderBy(asc(schema.categorias.ordem)),
+    db.select().from(schema.categorias).orderBy(asc(schema.categorias.ordem), asc(schema.categorias.id)),
   ]);
   return (
     <>

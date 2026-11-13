@@ -64,3 +64,15 @@ describe("mensagemPedido", () => {
     expect(m).toBe(m.trim());
   });
 });
+
+describe("mensagemPedido pago pelo site", () => {
+  it("mostra a taxa e o valor pago, sem 'a confirmar'", () => {
+    const m = mensagemPedido(base, { valor: 51970, taxaEntrega: 1000, forma: "Pix" });
+    expect(m).toContain("*Taxa de entrega:* R$\u00a010,00");
+    expect(m).toContain("✅ *Pago pelo site:* R$\u00a0519,70 (Pix)");
+    expect(m).not.toContain("a confirmar");
+  });
+  it("sem pagamento continua com a taxa a confirmar", () => {
+    expect(mensagemPedido(base)).toContain("_Taxa de entrega a confirmar_");
+  });
+});

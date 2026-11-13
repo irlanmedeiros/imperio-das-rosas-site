@@ -9,12 +9,7 @@ import { config } from "dotenv";
 config({ path: ".env.local", quiet: true });
 
 import { sql } from "drizzle-orm";
-import { DDL_PAGAMENTO, DDL_USUARIOS } from "../src/db/ddl";
-
-const PASSOS = [
-  { nome: "tabela usuarios (aba Usuários do painel)", sql: DDL_USUARIOS },
-  ...DDL_PAGAMENTO.map((ddl, i) => ({ nome: `pagamentos Asaas (${i + 1}/${DDL_PAGAMENTO.length})`, sql: ddl })),
-];
+import { DDL_TUDO as PASSOS } from "../src/db/ddl";
 
 async function main() {
   if (!process.env.DATABASE_URL) {

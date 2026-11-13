@@ -1,10 +1,11 @@
 import { exigirAdmin } from "@/lib/auth";
-import { and, count, desc, eq, gte, ne, sum } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray, notInArray, sum } from "drizzle-orm";
 import { ArrowRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { db, schema } from "@/db";
 import { TabelaPedidos } from "@/components/admin/tabela-pedidos";
 import { brl } from "@/lib/format";
+import { STATUS_A_ATENDER } from "@/lib/status";
 
 export const metadata = { title: "Visão geral" };
 
@@ -17,11 +18,11 @@ export default async function Dashboard() {
   await exigirAdmin();
   const desdeMes = inicioDoMes();
   const [[{ novos }], [{ mes, faturado }], [{ ativos }], recentes] = await Promise.all([
-    db.select({ novos: count() }).from(schema.pedidos).where(eq(schema.pedidos.status, "novo")),
+    db.select({ novos: count() }).from(schema.pedidos).where(inArray(schema.pedidos.status, STATUS_A_ATENDER)),
     db
       .select({ mes: count(), faturado: sum(schema.pedidos.total) })
       .from(schema.pedidos)
-      .where(and(gte(schema.pedidos.criadoEm, desdeMes), ne(schema.pedidos.status, "cancelado"))),
+      .where(and(gte(schema.pedidos.criadoEm, desdeMes), notInArray(schema.pedidos.status, ["cancelado", "pagamento"]))),
     db.select({ ativos: count() }).from(schema.produtos).where(eq(schema.produtos.ativo, true)),
     db.select().from(schema.pedidos).orderBy(desc(schema.pedidos.criadoEm)).limit(8),
   ]);
@@ -39,7 +40,7 @@ export default async function Dashboard() {
       </div>
       <div className="stats">
         <div className="stat">
-          <span>Pedidos novos</span>
+          <span title="Novos e confirmados (pagos)">Pedidos a atender</span>
           <strong>{novos}</strong>
         </div>
         <div className="stat">
@@ -63,7 +64,7 @@ export default async function Dashboard() {
       </div>
       <TabelaPedidos pedidos={recentes} />
       <p style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 12 }}>
-        Os valores somam só os produtos de pedidos registrados no site (sem entrega e sem cancelados). O pagamento é combinado pelo WhatsApp.
+        Os valores somam só os produtos de pedidos registrados no site (sem entrega, sem cancelados e sem os que ainda aguardam pagamento).
       </p>
     </>
   );

@@ -118,7 +118,7 @@ export function interpretarPlanilha(linhas: Linhas) {
     }
 
     const categoria = cel("categoria");
-    if (categoria) p.categoria = categoria.slice(0, 60);
+    if (categoria) p.categoria = categoria.slice(0, 120);
 
     const descricao = cel("descricao");
     if (descricao) {

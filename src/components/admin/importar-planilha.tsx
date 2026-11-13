@@ -67,7 +67,7 @@ export function ImportarPlanilha({ produtos }: { produtos: ProdutoAtual[] }) {
         <h2>1. Prepare a planilha</h2>
         <p>
           Uma linha por produto. Obrigatórios: <strong>Nome</strong> e <strong>Preço</strong>. As outras colunas são opcionais: Preço de (preço riscado),
-          Categoria, Descrição, Foto (link da imagem), Ativo e Destaque (sim/não). Produto com o mesmo nome de um já cadastrado é atualizado; os
+          Categoria (para subcategoria, escreva “Buquês {">"} Rosas”), Descrição, Foto (link da imagem), Ativo e Destaque (sim/não). Produto com o mesmo nome de um já cadastrado é atualizado; os
           demais são criados. Nada é apagado: célula vazia não muda o que já está cadastrado.
         </p>
         <div className="importar-botoes">

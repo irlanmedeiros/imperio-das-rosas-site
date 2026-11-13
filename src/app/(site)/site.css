@@ -785,6 +785,42 @@
 .chip > span:not(.chip-fundo) {
   position: relative;
 }
+/* subcategorias (ex.: Buquês › Rosas / Girassol / Lírio) */
+.subchips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-top: 10px;
+  padding-bottom: 2px;
+}
+.subchips::-webkit-scrollbar {
+  display: none;
+}
+.subchip {
+  flex-shrink: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px dashed #cfc6af;
+  background: transparent;
+  color: var(--forest);
+  transition: background 0.2s, border-color 0.2s;
+}
+.subchip small {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 10.5px;
+}
+.subchip:hover {
+  border-color: var(--forest);
+}
+.subchip.ativo {
+  background: var(--parchment);
+  border: 1px solid var(--forest);
+  font-weight: 600;
+}
 .ordenar {
   min-height: 46px;
   border-radius: 999px;
@@ -1286,6 +1322,13 @@
   border-top: 1px solid var(--line);
   background: var(--white);
 }
+.linha-sub {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
 .linha-total {
   display: flex;
   justify-content: space-between;
@@ -1379,8 +1422,76 @@
   background: var(--parchment);
   box-shadow: var(--shadow);
 }
+/* foto inteira (o buquê não é cortado); fundo claro preenche as sobras */
 .pdp-foto img {
-  object-fit: cover;
+  object-fit: contain;
+}
+.pdp-foto-botao {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+.pdp-foto-ampliar {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(20, 33, 24, 0.72);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+}
+/* foto ampliada: no máximo o tamanho da tela e o tamanho real da foto, sem esticar nem cortar */
+.foto-ampliada {
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 16px;
+  border: 0;
+  background: transparent;
+  display: none;
+  place-items: center;
+}
+.foto-ampliada[open] {
+  display: grid;
+}
+.foto-ampliada::backdrop {
+  background: rgba(12, 18, 14, 0.88);
+}
+.foto-ampliada img {
+  max-width: min(100%, 1100px);
+  max-height: calc(100dvh - 32px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+.foto-ampliada-fechar {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(255, 255, 255, 0.92);
+  color: #142118;
+  cursor: pointer;
 }
 .pdp h1 {
   font-family: var(--font-title), serif;
@@ -1616,6 +1727,13 @@
   }
 }
 
+/* celular: a foto do produto não ocupa a tela inteira (dá para ver nome e preço logo abaixo) */
+@media (max-width: 900px) {
+  .pdp-foto {
+    max-height: 68svh;
+    width: 100%;
+  }
+}
 @media (max-width: 900px) {
   :root {
     --header-h: 64px;

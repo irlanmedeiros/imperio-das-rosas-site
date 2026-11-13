@@ -12,8 +12,15 @@ export const lojaSchema = z.object({
   avisoTopo: z.string(),
   infoEntrega: z.string(),
   pedidoMinimoCentavos: z.number().int().min(0),
+  /** Cobrar pelo Asaas no checkout, antes de mandar o pedido no WhatsApp (precisa do ASAAS_API_KEY no servidor). */
+  pagamentoNoSite: z.boolean(),
+  /** Taxa de entrega por bairro, em centavos. */
+  taxasEntrega: z.array(z.object({ bairro: z.string().trim().min(2).max(80), valor: z.number().int().min(0).max(100_000) })).max(300),
+  /** Taxa para bairro fora da lista. null = o cliente de outro bairro combina a entrega e o pagamento no WhatsApp. */
+  taxaOutrosBairros: z.number().int().min(0).max(100_000).nullable(),
 });
 export type Loja = z.infer<typeof lojaSchema>;
+export type TaxaBairro = Loja["taxasEntrega"][number];
 
 const depoimentoSchema = z.object({ nome: z.string().min(1), texto: z.string().min(1) });
 const ocasiaoSchema = z.object({ titulo: z.string().min(1), imagem: z.string(), busca: z.string() });
@@ -57,6 +64,9 @@ export const LOJA_PADRAO: Loja = {
   avisoTopo: "Entrega no mesmo dia em João Pessoa",
   infoEntrega: "A taxa de entrega é calculada pelo bairro e confirmada no WhatsApp.",
   pedidoMinimoCentavos: 0,
+  pagamentoNoSite: true,
+  taxasEntrega: [],
+  taxaOutrosBairros: null,
 };
 
 export const CONTEUDO_PADRAO: Conteudo = {

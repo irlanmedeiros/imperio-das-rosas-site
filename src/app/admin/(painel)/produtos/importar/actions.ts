@@ -21,7 +21,7 @@ const itemSchema = z.object({
   nome: z.string().trim().min(2).max(120),
   preco: z.number().int().min(1),
   precoDe: z.number().int().min(0).nullable().optional(),
-  categoria: z.string().trim().max(60).nullable().optional(),
+  categoria: z.string().trim().max(120).nullable().optional(),
   descricao: z.string().trim().max(2000).nullable().optional(),
   foto: z.string().url().nullable().optional(),
   ativo: z.boolean().optional(),
@@ -38,28 +38,67 @@ export async function importarProdutos(itens: ProdutoImportado[]): Promise<Resul
 
   const [existentes, categorias, [{ ultima }]] = await Promise.all([
     db.select({ id: schema.produtos.id, nome: schema.produtos.nome, slug: schema.produtos.slug, foto: schema.produtos.foto }).from(schema.produtos),
-    db.select({ id: schema.categorias.id, nome: schema.categorias.nome, slug: schema.categorias.slug, ordem: schema.categorias.ordem }).from(schema.categorias),
+    db.select({ id: schema.categorias.id, nome: schema.categorias.nome, slug: schema.categorias.slug, ordem: schema.categorias.ordem, paiId: schema.categorias.paiId }).from(schema.categorias),
     db.select({ ultima: max(schema.produtos.ordem) }).from(schema.produtos),
   ]);
 
-  // categorias: casa pelo nome (sem acento/caixa) ou slug; cria as que faltam no fim da lista
-  const catPorChave = new Map<string, number>();
-  for (const c of categorias) {
-    catPorChave.set(chaveProduto(c.nome), c.id);
-    catPorChave.set(c.slug, c.id);
-  }
+  // categorias: casa pelo nome (sem acento/caixa) ou slug; cria as que faltam no fim da lista.
+  // "Buquês > Rosas" = subcategoria Rosas dentro de Buquês (as duas são criadas se faltarem).
   const categoriasCriadas: string[] = [];
-  let ordemCat = Math.max(-1, ...categorias.map((c) => c.ordem));
-  for (const nome of new Set(lista.map((p) => p.categoria).filter((c): c is string => !!c))) {
-    if (catPorChave.has(chaveProduto(nome)) || catPorChave.has(slugify(nome))) continue;
-    let slug = slugify(nome) || "categoria";
-    for (let i = 2; catPorChave.has(slug); i++) slug = `${slugify(nome)}-${i}`;
-    const [nova] = await db.insert(schema.categorias).values({ nome, slug, ordem: ++ordemCat }).returning({ id: schema.categorias.id });
-    catPorChave.set(chaveProduto(nome), nova.id);
-    catPorChave.set(slug, nova.id);
-    categoriasCriadas.push(nome);
+  const slugsCat = new Set(categorias.map((c) => c.slug));
+  const principais = new Map<string, number>(); // chave do nome → id
+  const filhas = new Map<string, number>(); // "id do pai>chave do nome" → id
+  for (const c of categorias) {
+    if (c.paiId) filhas.set(`${c.paiId}>${chaveProduto(c.nome)}`, c.id);
+    else {
+      principais.set(chaveProduto(c.nome), c.id);
+      principais.set(c.slug, c.id);
+    }
   }
-  const idCategoria = (nome: string | null | undefined) => (nome ? (catPorChave.get(chaveProduto(nome)) ?? catPorChave.get(slugify(nome)) ?? null) : null);
+  const qualquer = new Map(categorias.map((c) => [chaveProduto(c.nome), c.id])); // nome sozinho de uma subcategoria
+  for (const c of categorias) qualquer.set(c.slug, c.id);
+  let ordemCat = Math.max(-1, ...categorias.map((c) => c.ordem));
+  const criar = async (nome: string, paiId: number | null) => {
+    let slug = slugify(nome) || "categoria";
+    for (let i = 2; slugsCat.has(slug); i++) slug = `${slugify(nome) || "categoria"}-${i}`;
+    slugsCat.add(slug);
+    const [nova] = await db.insert(schema.categorias).values({ nome, slug, ordem: ++ordemCat, paiId }).returning({ id: schema.categorias.id });
+    return nova.id;
+  };
+  const cache = new Map<string, number>();
+  const idCategoriaOuCria = async (texto: string): Promise<number> => {
+    const chave = chaveProduto(texto);
+    if (cache.has(chave)) return cache.get(chave)!;
+    const [paiNome, filhoNome] = texto.split(/\s*[>›]\s*/).map((t) => t.trim()).filter(Boolean);
+    let id: number;
+    if (filhoNome) {
+      let paiId = principais.get(chaveProduto(paiNome)) ?? principais.get(slugify(paiNome));
+      if (!paiId) {
+        paiId = await criar(paiNome, null);
+        principais.set(chaveProduto(paiNome), paiId);
+        categoriasCriadas.push(paiNome);
+      }
+      const k = `${paiId}>${chaveProduto(filhoNome)}`;
+      id = filhas.get(k) ?? 0;
+      if (!id) {
+        id = await criar(filhoNome, paiId);
+        filhas.set(k, id);
+        categoriasCriadas.push(`${paiNome} > ${filhoNome}`);
+      }
+    } else {
+      id = principais.get(chave) ?? qualquer.get(chave) ?? qualquer.get(slugify(paiNome ?? texto)) ?? 0;
+      if (!id) {
+        id = await criar(paiNome ?? texto, null);
+        principais.set(chave, id);
+        categoriasCriadas.push(paiNome ?? texto);
+      }
+    }
+    cache.set(chave, id);
+    return id;
+  };
+  const idPorTexto = new Map<string, number>();
+  for (const nome of new Set(lista.map((p) => p.categoria).filter((c): c is string => !!c))) idPorTexto.set(nome, await idCategoriaOuCria(nome));
+  const idCategoria = (nome: string | null | undefined) => (nome ? (idPorTexto.get(nome) ?? null) : null);
 
   const existentePorChave = new Map(existentes.map((p) => [chaveProduto(p.nome), p]));
   const slugsUsados = new Set(existentes.map((p) => p.slug));

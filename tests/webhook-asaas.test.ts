@@ -82,6 +82,22 @@ describe.skipIf(!local)("webhook do Asaas (banco local)", async () => {
     expect((await estado()).cobranca).toBe("pago");
   });
 
+  it("pedido do checkout (aguardando pagamento) vira confirmado quando o pagamento cai", async () => {
+    const [p] = await db
+      .insert(schema.pedidos)
+      .values({ codigo: `IR-S${sufixo.slice(-5).toUpperCase()}`, status: "pagamento", clienteNome: "Teste Checkout", clienteTelefone: "(83) 99999-0000", tipoEntrega: "retirada", itens: [], total: 500 })
+      .returning({ id: schema.pedidos.id });
+    const linkSite = `${link}_site`;
+    await db.insert(schema.cobrancas).values({ pedidoId: p.id, asaasLinkId: linkSite, url: "https://www.asaas.com/c/teste2", valor: 500 });
+    try {
+      expect((await enviar(evento("PAYMENT_CONFIRMED", { paymentLink: linkSite, billingType: "CREDIT_CARD" }))).status).toBe(200);
+      const [depois] = await db.select().from(schema.pedidos).where(eq(schema.pedidos.id, p.id));
+      expect(depois.status).toBe("confirmado");
+    } finally {
+      await db.delete(schema.pedidos).where(eq(schema.pedidos.id, p.id));
+    }
+  });
+
   it("corpo inválido é recusado", async () => {
     expect((await enviar({ sem: "id" })).status).toBe(400);
   });

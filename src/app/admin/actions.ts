@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, min, ne } from "drizzle-orm";
+import { and, asc, eq, inArray, min, ne, sql } from "drizzle-orm";
 import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { db, schema } from "@/db";
@@ -9,6 +9,7 @@ import { buscarUsuario, exigirAdmin, exigirDono } from "@/lib/auth";
 import { conteudoSchema, lojaSchema, type Conteudo, type Loja } from "@/lib/config-types";
 import { TAG_LOJA } from "@/lib/data";
 import { slugify } from "@/lib/format";
+import { reordenarGrupo } from "@/lib/ordem";
 import { guardarFoto } from "@/lib/fotos";
 import { gerarHash, normalizarEmail, novoUsuarioSchema, PAPEIS, podeRemover, senhaSchema, type NovoUsuario, type Papel } from "@/lib/usuarios";
 
@@ -91,6 +92,48 @@ export async function alternarProduto(id: number, campo: "ativo" | "destaque", v
   return { ok: true };
 }
 
+const listaIds = z.array(z.number().int().positive()).min(1, "Nenhum produto escolhido.").max(2000);
+
+/**
+ * Salva a ordem escolhida no painel. `ids` é o grupo reorganizado (uma categoria, ou todos) na ordem desejada;
+ * os outros produtos ficam onde estão. Grava tudo numa consulta só.
+ */
+export async function salvarOrdemProdutos(ids: number[]): Promise<Resultado> {
+  await exigirAdmin();
+  const r = listaIds.safeParse(ids);
+  if (!r.success || new Set(r.data).size !== r.data.length) return { ok: false, erro: "Lista de produtos inválida." };
+  const atual = await db.select({ id: schema.produtos.id }).from(schema.produtos).orderBy(asc(schema.produtos.ordem), asc(schema.produtos.id));
+  const nova = reordenarGrupo(
+    atual.map((p) => p.id),
+    r.data,
+  );
+  const valores = sql.join(
+    nova.map((id, i) => sql`(${id}::int, ${(i + 1) * 10}::int)`),
+    sql`, `,
+  );
+  await db.execute(sql`UPDATE produtos SET ordem = v.ordem FROM (VALUES ${valores}) AS v(id, ordem) WHERE produtos.id = v.id AND produtos.ordem IS DISTINCT FROM v.ordem`);
+  atualizarSite();
+  return { ok: true, mensagem: "Ordem salva." };
+}
+
+/** Muda a categoria de vários produtos de uma vez (ex.: mandar os buquês de rosas para Buquês › Rosas). */
+export async function moverProdutosDeCategoria(ids: number[], categoriaId: number | null): Promise<Resultado> {
+  await exigirAdmin();
+  const r = listaIds.safeParse(ids);
+  if (!r.success) return { ok: false, erro: r.error.issues[0].message };
+  if (categoriaId !== null) {
+    const [existe] = await db.select({ id: schema.categorias.id }).from(schema.categorias).where(eq(schema.categorias.id, categoriaId));
+    if (!existe) return { ok: false, erro: "Categoria não encontrada. Recarregue a página." };
+  }
+  const feitos = await db
+    .update(schema.produtos)
+    .set({ categoriaId, atualizadoEm: new Date() })
+    .where(inArray(schema.produtos.id, r.data))
+    .returning({ id: schema.produtos.id });
+  atualizarSite();
+  return { ok: true, mensagem: `${feitos.length} ${feitos.length === 1 ? "produto movido" : "produtos movidos"}.` };
+}
+
 export async function excluirProduto(id: number): Promise<Resultado> {
   await exigirAdmin();
   await db.delete(schema.produtos).where(eq(schema.produtos.id, id));
@@ -100,22 +143,53 @@ export async function excluirProduto(id: number): Promise<Resultado> {
 
 /* ---------------- Categorias ---------------- */
 
-const categoriasSchema = z.array(z.object({ id: z.number().int().nullable(), nome: z.string().trim().min(2, "Nome da categoria muito curto").max(60) }));
+const categoriasSchema = z
+  .array(
+    z.object({
+      chave: z.string().min(1).max(40),
+      id: z.number().int().nullable(),
+      nome: z.string().trim().min(2, "Nome da categoria muito curto").max(60),
+      pai: z.string().max(40).nullable(),
+    }),
+  )
+  .max(200);
+export type CategoriaParaSalvar = z.input<typeof categoriasSchema>[number];
 
-export async function salvarCategorias(lista: { id: number | null; nome: string }[], removidas: number[]): Promise<Resultado> {
+/**
+ * Salva categorias e subcategorias de uma vez: a ordem de cada grupo é a ordem da lista.
+ * Só dois níveis: uma subcategoria não pode ter subcategorias.
+ */
+export async function salvarCategorias(lista: CategoriaParaSalvar[], removidas: number[]): Promise<Resultado> {
   await exigirAdmin();
   const r = categoriasSchema.safeParse(lista);
   if (!r.success) return { ok: false, erro: r.error.issues[0].message };
+  const itens = r.data;
+  const porChave = new Map(itens.map((c) => [c.chave, c]));
+  for (const c of itens) {
+    if (!c.pai) continue;
+    const pai = porChave.get(c.pai);
+    if (!pai || pai.chave === c.chave) return { ok: false, erro: `"${c.nome}": categoria principal não encontrada.` };
+    if (pai.pai) return { ok: false, erro: `"${c.nome}" está dentro de "${pai.nome}", que já é uma subcategoria. Use só dois níveis.` };
+  }
+
   for (const id of removidas) await db.delete(schema.categorias).where(eq(schema.categorias.id, id));
-  for (const [ordem, c] of r.data.entries()) {
+  // principais primeiro (as novas ganham id), depois as subcategorias, já com o id da principal
+  const idPorChave = new Map<string, number>();
+  const gravar = async (c: (typeof itens)[number], ordem: number, paiId: number | null) => {
     if (c.id) {
-      await db.update(schema.categorias).set({ nome: c.nome, ordem }).where(eq(schema.categorias.id, c.id));
-    } else {
-      let slug = slugify(c.nome);
-      const [existe] = await db.select({ id: schema.categorias.id }).from(schema.categorias).where(eq(schema.categorias.slug, slug));
-      if (existe) slug = `${slug}-${Date.now().toString(36)}`;
-      await db.insert(schema.categorias).values({ nome: c.nome, slug, ordem });
+      await db.update(schema.categorias).set({ nome: c.nome, ordem, paiId }).where(eq(schema.categorias.id, c.id));
+      idPorChave.set(c.chave, c.id);
+      return;
     }
+    let slug = slugify(c.nome) || "categoria";
+    const [existe] = await db.select({ id: schema.categorias.id }).from(schema.categorias).where(eq(schema.categorias.slug, slug));
+    if (existe) slug = `${slug}-${Date.now().toString(36)}`;
+    const [nova] = await db.insert(schema.categorias).values({ nome: c.nome, slug, ordem, paiId }).returning({ id: schema.categorias.id });
+    idPorChave.set(c.chave, nova.id);
+  };
+  for (const [ordem, c] of itens.filter((c) => !c.pai).entries()) await gravar(c, ordem, null);
+  for (const pai of itens.filter((c) => !c.pai)) {
+    for (const [ordem, c] of itens.filter((x) => x.pai === pai.chave).entries()) await gravar(c, ordem, idPorChave.get(pai.chave)!);
   }
   atualizarSite();
   return { ok: true, mensagem: "Categorias salvas." };

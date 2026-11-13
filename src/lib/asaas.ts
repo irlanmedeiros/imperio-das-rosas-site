@@ -1,7 +1,4 @@
 import "server-only";
-import { sql } from "drizzle-orm";
-import { db } from "@/db";
-import { DDL_PAGAMENTO } from "@/db/ddl";
 
 /**
  * Integração com o Asaas. Variáveis (secrets do Worker na Cloudflare; .env.local no desenvolvimento):
@@ -58,15 +55,5 @@ export function removerLinkPagamento(id: string) {
   return chamar<{ deleted: boolean; id: string }>(`/paymentLinks/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
-let tabelasProntas: Promise<void> | null = null;
-
-/** Cria as tabelas de pagamento se ainda não existirem (uma vez por instância do Worker). */
-export function garantirTabelasPagamento() {
-  tabelasProntas ??= (async () => {
-    for (const ddl of DDL_PAGAMENTO) await db.execute(sql.raw(ddl));
-  })().catch((e) => {
-    tabelasProntas = null; // tenta de novo na próxima chamada
-    throw e;
-  });
-  return tabelasProntas;
-}
+/** Mantido pelo nome antigo: as tabelas de pagamento fazem parte de garantirEsquema. */
+export { garantirEsquema as garantirTabelasPagamento } from "@/db/esquema";

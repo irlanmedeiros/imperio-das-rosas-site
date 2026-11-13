@@ -269,6 +269,10 @@
   border-radius: 50%;
   background: currentColor;
 }
+.status-pagamento {
+  background: #efefea;
+  color: #6b6a5e;
+}
 .status-novo {
   background: #fdf0dc;
   color: #a1620e;
@@ -460,6 +464,64 @@
   border: 1px solid var(--line);
   border-radius: 10px;
   background: #fcfbf8;
+}
+/* editor de categorias e subcategorias */
+.cat-grupo {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.cat-linha {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 200px) auto auto;
+  gap: 10px;
+  align-items: center;
+}
+.cat-sub {
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 200px) auto auto;
+  padding-left: 8px;
+}
+.cat-seta {
+  color: var(--muted);
+}
+.cat-total {
+  color: var(--muted);
+  white-space: nowrap;
+}
+.cat-acoes {
+  display: flex;
+  gap: 4px;
+}
+.cat-nova-sub {
+  justify-self: start;
+  margin-left: 32px;
+}
+@media (max-width: 640px) {
+  .cat-linha,
+  .cat-sub {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .cat-sub {
+    padding-left: 14px;
+    border-left: 2px solid var(--line);
+  }
+  .cat-seta {
+    display: none;
+  }
+  .cat-pai {
+    grid-column: 1;
+  }
+  .cat-total {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+  .cat-acoes {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+  .cat-nova-sub {
+    margin-left: 0;
+  }
 }
 .btn-icone {
   width: 38px;
@@ -904,4 +966,140 @@
   .form-grade {
     grid-template-columns: 1fr;
   }
+}
+
+/* lista de produtos: marcar vários e mover de categoria */
+.marcar {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--forest);
+  cursor: pointer;
+}
+.barra-lote {
+  position: sticky;
+  top: 8px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: var(--white, #fff);
+  border: 1px solid var(--forest);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+.barra-lote .input {
+  min-height: 40px;
+  width: auto;
+  flex: 1 1 200px;
+}
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 0;
+  padding: 4px 2px;
+  color: var(--olive, #6b7a3a);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* organizar a ordem dos produtos */
+.ordenar-topo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.ordenar-atalhos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.ordenar-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ordenar-lista li {
+  display: grid;
+  grid-template-columns: 58px 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fcfbf8;
+}
+.ordenar-lista li.inativo {
+  opacity: 0.55;
+}
+.ordenar-pos {
+  min-height: 38px;
+  padding: 0 6px;
+  text-align: center;
+  font-weight: 700;
+}
+.ordenar-nome {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ordenar-nome strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ordenar-nome small {
+  color: var(--muted);
+}
+.ordenar-acoes {
+  display: flex;
+  gap: 4px;
+}
+@media (max-width: 640px) {
+  .ordenar-lista li {
+    grid-template-columns: 50px 40px minmax(0, 1fr);
+  }
+  .ordenar-acoes {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+/* caixa de seleção com título e explicação (Configurações) */
+.opcao-check {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fcfbf8;
+  cursor: pointer;
+}
+.opcao-check input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: var(--forest);
+  flex-shrink: 0;
+}
+.opcao-check span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.opcao-check small {
+  color: var(--muted);
+  line-height: 1.45;
 }

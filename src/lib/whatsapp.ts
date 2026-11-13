@@ -13,15 +13,24 @@ type PedidoMsg = Pick<
   | "dataEntrega" | "periodo" | "destinatario" | "mensagemCartao" | "observacoes" | "itens" | "total"
 >;
 
-/** Mensagem do pedido que o cliente envia para a loja. */
-export function mensagemPedido(p: PedidoMsg) {
+/** Pagamento feito no site (Asaas), para a mensagem do pedido. */
+export type PagamentoMsg = { valor: number; taxaEntrega: number; forma: string | null };
+
+/** Mensagem do pedido que o cliente envia para a loja. Com `pago`, avisa que já foi pago pelo site. */
+export function mensagemPedido(p: PedidoMsg, pago?: PagamentoMsg | null) {
+  const entrega = p.tipoEntrega === "entrega";
   const linhas = [
     `🌹 *Novo pedido ${p.codigo}* — Império das Rosas`,
     "",
     ...p.itens.map((i) => `• ${i.qtd}x ${i.nome} — ${brl(i.preco * i.qtd)}`),
     "",
     `*Total dos produtos:* ${brl(p.total)}`,
-    p.tipoEntrega === "entrega" ? "_Taxa de entrega a confirmar_" : "",
+    ...(pago
+      ? [
+          entrega ? `*Taxa de entrega:* ${pago.taxaEntrega ? brl(pago.taxaEntrega) : "grátis"}` : "",
+          `✅ *Pago pelo site:* ${brl(pago.valor)}${pago.forma ? ` (${pago.forma})` : ""}`,
+        ]
+      : [entrega ? "_Taxa de entrega a confirmar_" : ""]),
     "",
     `*Cliente:* ${p.clienteNome} · ${p.clienteTelefone}`,
     p.tipoEntrega === "entrega"

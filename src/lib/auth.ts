@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db, schema } from "@/db";
+import { garantirEsquema } from "@/db/esquema";
 import { COOKIE_SESSAO, validarToken } from "./session";
 import { resolverSessao, type UsuarioSessao } from "./usuarios";
 
@@ -14,6 +15,8 @@ export async function buscarUsuario(email: string) {
 
 /** Garante sessão válida em páginas e Server Actions do painel e devolve quem está logado. */
 export async function exigirAdmin(): Promise<UsuarioSessao> {
+  // todo o painel passa por aqui: tabelas/colunas novas já existem antes de qualquer consulta
+  await garantirEsquema();
   const store = await cookies();
   const token = await validarToken(store.get(COOKIE_SESSAO)?.value);
   const sessao = token && (await resolverSessao(token.email, process.env.ADMIN_EMAIL, buscarUsuario));

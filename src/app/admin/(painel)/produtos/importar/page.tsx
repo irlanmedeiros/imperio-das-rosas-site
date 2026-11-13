@@ -1,28 +1,33 @@
-import { asc, eq } from "drizzle-orm";
+import { asc } from "drizzle-orm";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { db, schema } from "@/db";
 import { exigirAdmin } from "@/lib/auth";
 import { ImportarPlanilha } from "@/components/admin/importar-planilha";
+import { rotuloCategoria } from "@/lib/categorias";
 
 export const metadata = { title: "Importar planilha" };
 
 export default async function ImportarPage() {
   await exigirAdmin();
-  const produtos = await db
-    .select({
-      nome: schema.produtos.nome,
-      preco: schema.produtos.preco,
-      precoDe: schema.produtos.precoDe,
-      categoria: schema.categorias.nome,
-      descricao: schema.produtos.descricao,
-      foto: schema.produtos.foto,
-      ativo: schema.produtos.ativo,
-      destaque: schema.produtos.destaque,
-    })
-    .from(schema.produtos)
-    .leftJoin(schema.categorias, eq(schema.produtos.categoriaId, schema.categorias.id))
-    .orderBy(asc(schema.produtos.ordem), asc(schema.produtos.id));
+  const [linhas, categorias] = await Promise.all([
+    db
+      .select({
+        nome: schema.produtos.nome,
+        preco: schema.produtos.preco,
+        precoDe: schema.produtos.precoDe,
+        categoriaId: schema.produtos.categoriaId,
+        descricao: schema.produtos.descricao,
+        foto: schema.produtos.foto,
+        ativo: schema.produtos.ativo,
+        destaque: schema.produtos.destaque,
+      })
+      .from(schema.produtos)
+      .orderBy(asc(schema.produtos.ordem), asc(schema.produtos.id)),
+    db.select().from(schema.categorias),
+  ]);
+  // subcategoria sai como "Buquês > Rosas" (o mesmo formato que a importação entende)
+  const produtos = linhas.map(({ categoriaId, ...p }) => ({ ...p, categoria: rotuloCategoria(categorias, categoriaId)?.replace(" › ", " > ") ?? null }));
   return (
     <>
       <Link href="/admin/produtos" style={{ display: "inline-flex", gap: 6, alignItems: "center", color: "var(--muted)", marginBottom: 14 }}>

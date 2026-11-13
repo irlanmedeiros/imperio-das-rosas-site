@@ -1,12 +1,14 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, LoaderCircle, ShoppingBag, Store, Truck } from "lucide-react";
+import { ArrowRight, CreditCard, LoaderCircle, ShoppingBag, Store, Truck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { criarPedido, type EntradaPedido } from "@/app/(site)/checkout/actions";
 import { useCarrinho, useHidratado } from "@/components/carrinho";
+import type { TaxaBairro } from "@/lib/config-types";
+import { taxaEntrega } from "@/lib/entrega";
 import { brl } from "@/lib/format";
 import { LinhaItem } from "./gaveta-carrinho";
 
@@ -31,17 +33,30 @@ function clienteSalvo(): { nome?: string; telefone?: string } {
   }
 }
 
-export function FormCheckout({ infoEntrega }: { infoEntrega: string }) {
+type Props = {
+  infoEntrega: string;
+  /** Cobrar no site (Asaas) antes do WhatsApp */
+  pagarNoSite: boolean;
+  /** Taxas por bairro e taxa dos demais bairros (null = combinar no WhatsApp) */
+  taxas: TaxaBairro[];
+  taxaOutros: number | null;
+};
+
+const OUTRO = "__outro";
+
+export function FormCheckout(props: Props) {
   // o formulário depende do carrinho e do localStorage: só monta no navegador
-  return useHidratado() ? <Formulario infoEntrega={infoEntrega} /> : <div style={{ minHeight: 400 }} />;
+  return useHidratado() ? <Formulario {...props} /> : <div style={{ minHeight: 400 }} />;
 }
 
-function Formulario({ infoEntrega }: { infoEntrega: string }) {
+function Formulario({ infoEntrega, pagarNoSite, taxas, taxaOutros }: Props) {
   const { itens, total, limpar } = useCarrinho();
   const router = useRouter();
   const [pendente, iniciar] = useTransition();
   const [erros, setErros] = useState<Record<string, string>>({});
   const [mensagem, setMensagem] = useState<string | null>(null);
+  // depois de registrar: o carrinho é esvaziado, mas a tela mostra "abrindo…" até a próxima página carregar
+  const [saindo, setSaindo] = useState<null | "pagamento" | "pedido">(null);
   const [f, setF] = useState(() => {
     const salvo = clienteSalvo();
     return {
@@ -59,6 +74,11 @@ function Formulario({ infoEntrega }: { infoEntrega: string }) {
     };
   });
   const minData = useMemo(() => hoje(), []);
+  // com a lista de bairros do painel, o bairro é escolhido numa lista (com a taxa); "Outro" libera o campo livre
+  const comLista = taxas.length > 0;
+  const [escolhaBairro, setEscolhaBairro] = useState("");
+  const taxa = taxaEntrega(f.tipoEntrega, f.bairro, taxas, taxaOutros);
+  const pagarAgora = pagarNoSite && taxa !== null;
 
   const set = (campo: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const v = campo === "clienteTelefone" ? mascaraTelefone(e.target.value) : e.target.value;
@@ -76,8 +96,11 @@ function Formulario({ infoEntrega }: { infoEntrega: string }) {
         try {
           localStorage.setItem("imperio-cliente", JSON.stringify({ nome: f.clienteNome, telefone: f.clienteTelefone }));
         } catch {}
+        setSaindo(r.pagamentoUrl ? "pagamento" : "pedido");
         limpar();
-        router.push(`/pedido/${r.codigo}?novo=1`);
+        // paga no Asaas; ao terminar, o Asaas devolve o cliente para /pedido/<código>?pago=1
+        if (r.pagamentoUrl) window.location.href = r.pagamentoUrl;
+        else router.push(`/pedido/${r.codigo}?novo=1`);
       } else {
         setErros(r.erros);
         setMensagem(r.mensagem ?? "Confira os campos destacados.");
@@ -85,6 +108,15 @@ function Formulario({ infoEntrega }: { infoEntrega: string }) {
         if (primeiro) document.getElementById(primeiro)?.focus();
       }
     });
+  }
+
+  if (saindo) {
+    return (
+      <div className="gaveta-vazia" role="status">
+        <LoaderCircle style={{ animation: "girar 1s linear infinite" }} />
+        <p>{saindo === "pagamento" ? "Abrindo o pagamento seguro…" : "Pedido registrado! Abrindo…"}</p>
+      </div>
+    );
   }
 
   if (itens.length === 0) {
@@ -153,7 +185,35 @@ function Formulario({ infoEntrega }: { infoEntrega: string }) {
                   style={{ overflow: "hidden" }}
                 >
                   {campo("endereco", "Endereço", { autoComplete: "street-address", placeholder: "Rua, número, complemento" }, true)}
-                  {campo("bairro", "Bairro", { placeholder: "Ex.: Manaíra" })}
+                  {comLista ? (
+                    <label className="field">
+                      <span>Bairro</span>
+                      <select
+                        id="bairro"
+                        className="input"
+                        value={escolhaBairro}
+                        aria-invalid={!!erros.bairro}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setEscolhaBairro(v);
+                          setF((x) => ({ ...x, bairro: v === OUTRO ? "" : v }));
+                          if (erros.bairro) setErros((er) => ({ ...er, bairro: "" }));
+                        }}
+                      >
+                        <option value="">Escolha o bairro</option>
+                        {taxas.map((t) => (
+                          <option key={t.bairro} value={t.bairro}>
+                            {t.bairro} — {t.valor ? brl(t.valor) : "grátis"}
+                          </option>
+                        ))}
+                        <option value={OUTRO}>Outro bairro{taxaOutros != null ? ` — ${brl(taxaOutros)}` : ""}</option>
+                      </select>
+                      {erros.bairro && escolhaBairro !== OUTRO && <span className="erro">{erros.bairro}</span>}
+                    </label>
+                  ) : (
+                    campo("bairro", "Bairro", { placeholder: "Ex.: Manaíra" })
+                  )}
+                  {comLista && escolhaBairro === OUTRO && campo("bairro", "Qual bairro?", { placeholder: "Nome do bairro" })}
                   {campo("destinatario", "Quem vai receber?", { placeholder: "Nome de quem recebe (opcional)" })}
                 </motion.div>
               )}
@@ -201,11 +261,34 @@ function Formulario({ infoEntrega }: { infoEntrega: string }) {
             ))}
           </AnimatePresence>
         </div>
-        <div className="linha-total" style={{ marginTop: 18 }}>
-          <span>Total dos produtos</span>
-          <strong>{brl(total)}</strong>
-        </div>
-        <p className="nota">{f.tipoEntrega === "entrega" ? "+ taxa de entrega, confirmada no WhatsApp." : "Retirada na loja, sem taxa."}</p>
+        {taxa === null ? (
+          <>
+            <div className="linha-total" style={{ marginTop: 18 }}>
+              <span>Total dos produtos</span>
+              <strong>{brl(total)}</strong>
+            </div>
+            <p className="nota">
+              {comLista && !f.bairro.trim()
+                ? "Escolha o bairro para ver a taxa de entrega."
+                : "+ taxa de entrega, confirmada no WhatsApp."}
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="linha-sub" style={{ marginTop: 18 }}>
+              <span>Produtos</span>
+              <span>{brl(total)}</span>
+            </div>
+            <div className="linha-sub">
+              <span>{f.tipoEntrega === "retirada" ? "Retirada na loja" : "Entrega"}</span>
+              <span>{taxa ? brl(taxa) : "grátis"}</span>
+            </div>
+            <div className="linha-total" style={{ marginBottom: 16 }}>
+              <span>Total</span>
+              <strong>{brl(total + taxa)}</strong>
+            </div>
+          </>
+        )}
         {mensagem && (
           <p className="erro" role="alert" style={{ marginBottom: 12 }}>
             {mensagem}
@@ -214,7 +297,11 @@ function Formulario({ infoEntrega }: { infoEntrega: string }) {
         <button className="btn btn-primary btn-block" type="submit" disabled={pendente}>
           {pendente ? (
             <>
-              <LoaderCircle className="girando" style={{ animation: "girar 1s linear infinite" }} /> Registrando…
+              <LoaderCircle className="girando" style={{ animation: "girar 1s linear infinite" }} /> {pagarAgora ? "Abrindo o pagamento…" : "Registrando…"}
+            </>
+          ) : pagarAgora ? (
+            <>
+              <CreditCard /> Ir para o pagamento
             </>
           ) : (
             <>
@@ -223,7 +310,9 @@ function Formulario({ infoEntrega }: { infoEntrega: string }) {
           )}
         </button>
         <p className="nota" style={{ marginTop: 12, marginBottom: 0, textAlign: "center" }}>
-          O pagamento é combinado direto com a loja pelo WhatsApp.
+          {pagarAgora
+            ? "Pague com Pix ou cartão no ambiente seguro do Asaas. Depois do pagamento, o pedido vai pronto para o WhatsApp da loja."
+            : "O pagamento é combinado direto com a loja pelo WhatsApp."}
         </p>
       </motion.aside>
     </form>

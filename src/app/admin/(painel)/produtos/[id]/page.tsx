@@ -14,7 +14,7 @@ export default async function EditarProduto({ params }: { params: Promise<{ id: 
   const novo = id === "novo";
   if (!novo && !/^\d+$/.test(id)) notFound();
   const [categorias, [produto]] = await Promise.all([
-    db.select().from(schema.categorias).orderBy(asc(schema.categorias.ordem)),
+    db.select().from(schema.categorias).orderBy(asc(schema.categorias.ordem), asc(schema.categorias.id)),
     novo ? Promise.resolve([null]) : db.select().from(schema.produtos).where(eq(schema.produtos.id, Number(id))),
   ]);
   if (!novo && !produto) notFound();
