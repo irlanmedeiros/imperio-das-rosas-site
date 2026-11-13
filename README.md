@@ -85,7 +85,7 @@ data/                  catálogo inicial exportado do banco
 - **Páginas públicas são estáticas** (CDN). Os dados vêm de `src/lib/data.ts`, cacheados com a tag `loja`.
 - Toda alteração no admin chama `atualizarSite()` (`src/app/admin/actions.ts`): `updateTag("loja")` + `revalidatePath("/", "layout")`. O site reflete a mudança na próxima visita.
 - Mudou os **textos padrão** em `config-types.ts` ou o formato dos dados? Altere `VERSAO_CACHE` em `data.ts` — o cache da Vercel sobrevive entre deploys.
-- **Pedido**: carrinho (navegador) → `criarPedido` valida com zod, busca preços e a taxa do bairro no servidor, grava em `pedidos` → se o pagamento no site estiver ligado, o cliente vai para o link do Asaas (status *Aguardando pagamento*); pago, o webhook confirma o pedido e `/pedido/IR-XXXXXX` mostra "Pago!" e abre o WhatsApp com a mensagem já dizendo que foi pago. Sem Asaas, sem taxa conhecida para o bairro ou se o Asaas falhar, vai direto para o WhatsApp como antes.
+- **Pedido**: carrinho (navegador) → `criarPedido` valida com zod, busca preços no servidor, grava em `pedidos` → com o pagamento no site ligado, o cliente paga **os produtos** no link do Asaas (status *Aguardando pagamento*); pago, o webhook confirma o pedido e `/pedido/IR-XXXXXX` mostra "Pago!" e abre o WhatsApp com a mensagem já dizendo que foi pago. Entrega: a taxa é combinada no WhatsApp; retirada não tem taxa. Sem Asaas ou se ele falhar, vai direto para o WhatsApp como antes.
 - **Categorias e subcategorias**: dois níveis (`categorias.pai_id`, ex.: Buquês › Rosas). O catálogo mostra as principais e, ao escolher uma, os botões das subcategorias. Regras em `src/lib/categorias.ts`.
 - **Ordem dos produtos**: Admin → Produtos → *Organizar ordem* (por categoria ou todos; setas, posição digitada ou "mais baratos primeiro"). Vale para "Mais relevantes" no catálogo e para os carrosséis. Regras em `src/lib/ordem.ts`.
 - **Colunas/tabelas novas** entram sozinhas no primeiro uso (`garantirEsquema` em `src/db/esquema.ts`), porque o build da Cloudflare roda sem banco; `npm run db:migrar` faz o mesmo.
@@ -104,7 +104,7 @@ data/                  catálogo inicial exportado do banco
 
 Dois caminhos, os dois terminam no webhook `POST /api/asaas/webhook` (cobrança **Paga**, pedido **Confirmado**):
 
-1. **No checkout (padrão)**: o cliente escolhe o bairro (lista de taxas em **Configurações → Pagamento no site e taxas de entrega**), vê o total e clica em **Ir para o pagamento** → paga no Asaas → volta para `/pedido/<código>?pago=1`, que espera a confirmação e abre o WhatsApp com o pedido já pago. Se ele sair sem pagar, a página do pedido tem **Pagar** (reabre ou gera outro link). Desligue em Configurações para voltar ao fluxo só pelo WhatsApp.
+1. **No checkout (padrão)**: o cliente escolhe retirada ou entrega e clica em **Ir para o pagamento** → paga os produtos no Asaas → volta para `/pedido/<código>?pago=1`, que espera a confirmação e abre o WhatsApp com o pedido já pago (entrega: "taxa a combinar"). Se ele sair sem pagar, a página do pedido tem **Pagar** (reabre ou gera outro link). Desligue em **Configurações → Pagamento no site** para voltar ao fluxo só pelo WhatsApp.
 2. **Pelo painel**: em **Pedidos → pedido** o atendente informa a taxa e clica em **Gerar link de pagamento** → envia ao cliente pelo WhatsApp.
 
 - Código: `src/lib/asaas.ts` (API), `src/lib/pagamento.ts` (regras, testadas), `src/app/api/asaas/webhook/route.ts`, `src/app/admin/(painel)/pedidos/[id]/actions.ts`, `src/components/admin/cobranca-pedido.tsx`.

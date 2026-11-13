@@ -7,8 +7,6 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { criarPedido, type EntradaPedido } from "@/app/(site)/checkout/actions";
 import { useCarrinho, useHidratado } from "@/components/carrinho";
-import type { TaxaBairro } from "@/lib/config-types";
-import { taxaEntrega } from "@/lib/entrega";
 import { brl } from "@/lib/format";
 import { LinhaItem } from "./gaveta-carrinho";
 
@@ -35,21 +33,16 @@ function clienteSalvo(): { nome?: string; telefone?: string } {
 
 type Props = {
   infoEntrega: string;
-  /** Cobrar no site (Asaas) antes do WhatsApp */
+  /** Cobrar os produtos no site (Asaas) antes do WhatsApp; a taxa de entrega é combinada no WhatsApp */
   pagarNoSite: boolean;
-  /** Taxas por bairro e taxa dos demais bairros (null = combinar no WhatsApp) */
-  taxas: TaxaBairro[];
-  taxaOutros: number | null;
 };
-
-const OUTRO = "__outro";
 
 export function FormCheckout(props: Props) {
   // o formulário depende do carrinho e do localStorage: só monta no navegador
   return useHidratado() ? <Formulario {...props} /> : <div style={{ minHeight: 400 }} />;
 }
 
-function Formulario({ infoEntrega, pagarNoSite, taxas, taxaOutros }: Props) {
+function Formulario({ infoEntrega, pagarNoSite }: Props) {
   const { itens, total, limpar } = useCarrinho();
   const router = useRouter();
   const [pendente, iniciar] = useTransition();
@@ -74,11 +67,8 @@ function Formulario({ infoEntrega, pagarNoSite, taxas, taxaOutros }: Props) {
     };
   });
   const minData = useMemo(() => hoje(), []);
-  // com a lista de bairros do painel, o bairro é escolhido numa lista (com a taxa); "Outro" libera o campo livre
-  const comLista = taxas.length > 0;
-  const [escolhaBairro, setEscolhaBairro] = useState("");
-  const taxa = taxaEntrega(f.tipoEntrega, f.bairro, taxas, taxaOutros);
-  const pagarAgora = pagarNoSite && taxa !== null;
+  const pagarAgora = pagarNoSite;
+  const entrega = f.tipoEntrega === "entrega";
 
   const set = (campo: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const v = campo === "clienteTelefone" ? mascaraTelefone(e.target.value) : e.target.value;
@@ -162,7 +152,7 @@ function Formulario({ infoEntrega, pagarNoSite, taxas, taxaOutros }: Props) {
               <Truck size={22} color="var(--forest)" />
               <span>
                 <strong>Entregar</strong>
-                <small>No endereço que você escolher</small>
+                <small>Taxa combinada no WhatsApp</small>
               </span>
             </label>
             <label className="opcao">
@@ -185,35 +175,7 @@ function Formulario({ infoEntrega, pagarNoSite, taxas, taxaOutros }: Props) {
                   style={{ overflow: "hidden" }}
                 >
                   {campo("endereco", "Endereço", { autoComplete: "street-address", placeholder: "Rua, número, complemento" }, true)}
-                  {comLista ? (
-                    <label className="field">
-                      <span>Bairro</span>
-                      <select
-                        id="bairro"
-                        className="input"
-                        value={escolhaBairro}
-                        aria-invalid={!!erros.bairro}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setEscolhaBairro(v);
-                          setF((x) => ({ ...x, bairro: v === OUTRO ? "" : v }));
-                          if (erros.bairro) setErros((er) => ({ ...er, bairro: "" }));
-                        }}
-                      >
-                        <option value="">Escolha o bairro</option>
-                        {taxas.map((t) => (
-                          <option key={t.bairro} value={t.bairro}>
-                            {t.bairro} — {t.valor ? brl(t.valor) : "grátis"}
-                          </option>
-                        ))}
-                        <option value={OUTRO}>Outro bairro{taxaOutros != null ? ` — ${brl(taxaOutros)}` : ""}</option>
-                      </select>
-                      {erros.bairro && escolhaBairro !== OUTRO && <span className="erro">{erros.bairro}</span>}
-                    </label>
-                  ) : (
-                    campo("bairro", "Bairro", { placeholder: "Ex.: Manaíra" })
-                  )}
-                  {comLista && escolhaBairro === OUTRO && campo("bairro", "Qual bairro?", { placeholder: "Nome do bairro" })}
+                  {campo("bairro", "Bairro", { placeholder: "Ex.: Manaíra" })}
                   {campo("destinatario", "Quem vai receber?", { placeholder: "Nome de quem recebe (opcional)" })}
                 </motion.div>
               )}
@@ -261,34 +223,17 @@ function Formulario({ infoEntrega, pagarNoSite, taxas, taxaOutros }: Props) {
             ))}
           </AnimatePresence>
         </div>
-        {taxa === null ? (
-          <>
-            <div className="linha-total" style={{ marginTop: 18 }}>
-              <span>Total dos produtos</span>
-              <strong>{brl(total)}</strong>
-            </div>
-            <p className="nota">
-              {comLista && !f.bairro.trim()
-                ? "Escolha o bairro para ver a taxa de entrega."
-                : "+ taxa de entrega, confirmada no WhatsApp."}
-            </p>
-          </>
-        ) : (
-          <>
-            <div className="linha-sub" style={{ marginTop: 18 }}>
-              <span>Produtos</span>
-              <span>{brl(total)}</span>
-            </div>
-            <div className="linha-sub">
-              <span>{f.tipoEntrega === "retirada" ? "Retirada na loja" : "Entrega"}</span>
-              <span>{taxa ? brl(taxa) : "grátis"}</span>
-            </div>
-            <div className="linha-total" style={{ marginBottom: 16 }}>
-              <span>Total</span>
-              <strong>{brl(total + taxa)}</strong>
-            </div>
-          </>
-        )}
+        <div className="linha-total" style={{ marginTop: 18 }}>
+          <span>{pagarAgora ? "Total a pagar" : "Total dos produtos"}</span>
+          <strong>{brl(total)}</strong>
+        </div>
+        <p className="nota">
+          {entrega
+            ? pagarAgora
+              ? "Você paga os produtos agora. A taxa de entrega é combinada com a loja no WhatsApp."
+              : "+ taxa de entrega, confirmada no WhatsApp."
+            : "Retirada na loja, sem taxa."}
+        </p>
         {mensagem && (
           <p className="erro" role="alert" style={{ marginBottom: 12 }}>
             {mensagem}

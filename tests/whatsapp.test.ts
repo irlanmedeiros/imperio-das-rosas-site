@@ -66,11 +66,20 @@ describe("mensagemPedido", () => {
 });
 
 describe("mensagemPedido pago pelo site", () => {
-  it("mostra a taxa e o valor pago, sem 'a confirmar'", () => {
+  it("entrega: produtos pagos no site e taxa a combinar no WhatsApp", () => {
+    const m = mensagemPedido(base, { valor: 50970, taxaEntrega: 0, forma: "Pix" });
+    expect(m).toContain("✅ *Pago pelo site:* R$\u00a0509,70 (Pix)");
+    expect(m).toContain("_Taxa de entrega a combinar_");
+  });
+  it("link do painel com taxa: mostra a taxa já paga", () => {
     const m = mensagemPedido(base, { valor: 51970, taxaEntrega: 1000, forma: "Pix" });
-    expect(m).toContain("*Taxa de entrega:* R$\u00a010,00");
-    expect(m).toContain("✅ *Pago pelo site:* R$\u00a0519,70 (Pix)");
-    expect(m).not.toContain("a confirmar");
+    expect(m).toContain("*Taxa de entrega (já paga):* R$\u00a010,00");
+    expect(m).not.toContain("a combinar");
+  });
+  it("retirada não fala de taxa", () => {
+    const m = mensagemPedido({ ...base, tipoEntrega: "retirada" }, { valor: 50970, taxaEntrega: 0, forma: null });
+    expect(m).not.toContain("Taxa de entrega");
+    expect(m).toContain("*Retirada na loja*");
   });
   it("sem pagamento continua com a taxa a confirmar", () => {
     expect(mensagemPedido(base)).toContain("_Taxa de entrega a confirmar_");

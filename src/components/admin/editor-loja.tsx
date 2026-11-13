@@ -4,16 +4,12 @@ import { LoaderCircle } from "lucide-react";
 import { useState, useTransition } from "react";
 import { salvarLoja } from "@/app/admin/actions";
 import type { Loja } from "@/lib/config-types";
-import { lerTaxas, taxasEmTexto } from "@/lib/entrega";
-import { brl, centavosParaInput, parsePreco, soDigitos } from "@/lib/format";
+import { centavosParaInput, parsePreco, soDigitos } from "@/lib/format";
 import { linkWhatsApp } from "@/lib/whatsapp";
 
 export function EditorLoja({ inicial, asaasConfigurado }: { inicial: Loja; asaasConfigurado: boolean }) {
   const [l, setL] = useState(inicial);
   const [minimo, setMinimo] = useState(centavosParaInput(inicial.pedidoMinimoCentavos || null));
-  const [textoTaxas, setTextoTaxas] = useState(taxasEmTexto(inicial.taxasEntrega));
-  const [outros, setOutros] = useState(inicial.taxaOutrosBairros == null ? "" : centavosParaInput(inicial.taxaOutrosBairros));
-  const lidas = lerTaxas(textoTaxas);
   const [pendente, iniciar] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null);
   const placeholder = l.whatsapp === "5583999999999";
@@ -28,18 +24,7 @@ export function EditorLoja({ inicial, asaasConfigurado }: { inicial: Loja; asaas
 
   function salvar() {
     iniciar(async () => {
-      if (lidas.erros.length) {
-        setMsg({ ok: false, texto: `Não entendi a taxa destas linhas: ${lidas.erros.slice(0, 3).join(" | ")}` });
-        return;
-      }
-      const r = await salvarLoja({
-        ...l,
-        whatsapp: soDigitos(l.whatsapp),
-        pedidoMinimoCentavos: parsePreco(minimo) ?? 0,
-        taxasEntrega: lidas.taxas,
-        taxaOutrosBairros: outros.trim() === "" ? null : (parsePreco(outros) ?? null),
-      });
-      if (r.ok) setTextoTaxas(taxasEmTexto(lidas.taxas));
+      const r = await salvarLoja({ ...l, whatsapp: soDigitos(l.whatsapp), pedidoMinimoCentavos: parsePreco(minimo) ?? 0 });
       setMsg(r.ok ? { ok: true, texto: "Salvo! O site já usa os novos dados." } : { ok: false, texto: r.erro });
     });
   }
@@ -93,46 +78,18 @@ export function EditorLoja({ inicial, asaasConfigurado }: { inicial: Loja; asaas
         </div>
       </div>
       <div className="cartao">
-        <h2>Pagamento no site e taxas de entrega</h2>
+        <h2>Pagamento no site</h2>
         <label className="opcao-check">
           <input type="checkbox" checked={l.pagamentoNoSite} onChange={(e) => setL({ ...l, pagamentoNoSite: e.target.checked })} />
           <span>
-            <strong>Cobrar no site antes de enviar ao WhatsApp</strong>
+            <strong>Cobrar os produtos no site antes de enviar ao WhatsApp</strong>
             <small>
-              No checkout, o cliente paga por Pix ou cartão (Asaas) e só depois envia o pedido pronto, já pago, no WhatsApp.
+              No checkout, o cliente paga os produtos por Pix ou cartão (Asaas) e só depois envia o pedido pronto, já pago, no WhatsApp. Se escolher entrega, a
+              taxa é combinada com a loja no WhatsApp; retirada na loja não tem taxa.
               {!asaasConfigurado && " ⚠️ Falta configurar a chave do Asaas no servidor: enquanto isso, os pedidos seguem direto para o WhatsApp."}
             </small>
           </span>
         </label>
-        <div className="form-grade" style={{ marginTop: 16 }}>
-          <label className="field inteiro">
-            <span>Taxa de entrega por bairro (um por linha: bairro e valor)</span>
-            <textarea
-              className="input"
-              value={textoTaxas}
-              onChange={(e) => setTextoTaxas(e.target.value)}
-              placeholder={"Manaíra - 10,00\nTambaú - 10,00\nBessa - 12,00\nMangabeira - 15,00"}
-              style={{ minHeight: 160, fontFamily: "inherit" }}
-              spellCheck={false}
-            />
-            <small>
-              {lidas.taxas.length > 0
-                ? `${lidas.taxas.length} bairros. O cliente escolhe o bairro numa lista e já vê a taxa e o total.`
-                : "Sem a lista, o cliente digita o bairro e a taxa é combinada no WhatsApp (sem pagamento no site para entrega)."}
-              {lidas.erros.length > 0 && <span className="erro"> Linhas sem valor: {lidas.erros.slice(0, 3).join(" | ")}</span>}
-            </small>
-          </label>
-          <label className="field">
-            <span>Taxa para outros bairros (R$)</span>
-            <input className="input" inputMode="decimal" value={outros} onChange={(e) => setOutros(e.target.value)} placeholder="Vazio = combinar no WhatsApp" />
-            <small>
-              {outros.trim() === ""
-                ? "Bairro fora da lista: o pedido vai para o WhatsApp para combinar a entrega."
-                : `Bairro fora da lista paga ${brl(parsePreco(outros) ?? 0)} de entrega.`}{" "}
-              Retirada na loja não tem taxa.
-            </small>
-          </label>
-        </div>
       </div>
       <div className="barra-salvar">
         {msg && <span className={`msg ${msg.ok ? "msg-ok" : "erro"}`}>{msg.texto}</span>}

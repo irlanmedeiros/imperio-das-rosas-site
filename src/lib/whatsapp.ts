@@ -27,8 +27,9 @@ export function mensagemPedido(p: PedidoMsg, pago?: PagamentoMsg | null) {
     `*Total dos produtos:* ${brl(p.total)}`,
     ...(pago
       ? [
-          entrega ? `*Taxa de entrega:* ${pago.taxaEntrega ? brl(pago.taxaEntrega) : "grátis"}` : "",
           `✅ *Pago pelo site:* ${brl(pago.valor)}${pago.forma ? ` (${pago.forma})` : ""}`,
+          // no checkout o cliente paga só os produtos; a entrega é combinada aqui na conversa
+          entrega ? (pago.taxaEntrega ? `*Taxa de entrega (já paga):* ${brl(pago.taxaEntrega)}` : "_Taxa de entrega a combinar_") : "",
         ]
       : [entrega ? "_Taxa de entrega a confirmar_" : ""]),
     "",

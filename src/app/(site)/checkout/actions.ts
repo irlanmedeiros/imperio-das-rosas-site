@@ -4,7 +4,6 @@ import { inArray, and, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { cobrancasDoPedido, criarCobranca, pagamentoNoSiteAtivo } from "@/lib/cobranca";
 import { getLoja } from "@/lib/data";
-import { taxaEntrega } from "@/lib/entrega";
 import { entradaPedidoSchema, errosPorCampo, hojeRecife, montarItens, novoCodigo, type EntradaPedido } from "@/lib/pedido";
 
 export type { EntradaPedido } from "@/lib/pedido";
@@ -32,9 +31,8 @@ export async function criarPedido(dados: EntradaPedido): Promise<ResultadoPedido
   }
 
   const entrega = d.tipoEntrega === "entrega";
-  // taxa também do servidor (lista de bairros do painel); sem taxa conhecida, a entrega é combinada no WhatsApp
-  const taxa = taxaEntrega(d.tipoEntrega, d.bairro, loja.taxasEntrega, loja.taxaOutrosBairros);
-  const cobrarNoSite = pagamentoNoSiteAtivo(loja) && taxa !== null;
+  // no site o cliente paga só os produtos; a taxa de entrega é combinada com a loja no WhatsApp
+  const cobrarNoSite = pagamentoNoSiteAtivo(loja);
 
   let pedido: typeof schema.pedidos.$inferSelect | undefined;
   for (let tentativa = 0; tentativa < 4 && !pedido; tentativa++) {
@@ -66,7 +64,7 @@ export async function criarPedido(dados: EntradaPedido): Promise<ResultadoPedido
   if (!cobrarNoSite) return { ok: true, codigo: pedido.codigo };
 
   try {
-    return { ok: true, codigo: pedido.codigo, pagamentoUrl: await criarCobranca(pedido, taxa) };
+    return { ok: true, codigo: pedido.codigo, pagamentoUrl: await criarCobranca(pedido, 0) };
   } catch (e) {
     // Asaas fora do ar ou recusou: o pedido não se perde, segue pelo WhatsApp como antes
     console.error("checkout: link de pagamento falhou", e);

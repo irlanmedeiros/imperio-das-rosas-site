@@ -49,7 +49,9 @@ export default async function PedidoPage({ params, searchParams }: { params: Pro
               <p className="subtitulo">
                 {confirmando
                   ? "Isso leva poucos segundos. Assim que o pagamento for confirmado, o pedido vai pronto para o WhatsApp da loja."
-                  : "Pague com Pix ou cartão para confirmar o pedido. Depois do pagamento, você envia o pedido pronto no WhatsApp da loja."}
+                  : pedido.tipoEntrega === "entrega"
+                    ? "Pague os produtos com Pix ou cartão para confirmar o pedido. Depois, envie o pedido pronto no WhatsApp da loja e combine a entrega por lá."
+                    : "Pague com Pix ou cartão para confirmar o pedido. Depois do pagamento, você envia o pedido pronto no WhatsApp da loja."}
               </p>
               <div className="codigo">{pedido.codigo}</div>
               {!confirmando && <PagarAgora codigo={pedido.codigo} rotulo={cobranca ? `Pagar ${brl(cobranca.valor)}` : "Pagar agora"} />}
@@ -81,7 +83,9 @@ export default async function PedidoPage({ params, searchParams }: { params: Pro
               <h1 className="titulo">{paga ? "Pago! Agora envie no WhatsApp" : "Agora é só enviar no WhatsApp"}</h1>
               <p className="subtitulo">
                 {paga
-                  ? "Recebemos o seu pagamento. Envie a mensagem pronta para a loja já começar a preparar o seu pedido."
+                  ? pedido.tipoEntrega === "entrega"
+                    ? "Recebemos o seu pagamento. Envie a mensagem pronta para a loja e combine a taxa de entrega por lá."
+                    : "Recebemos o seu pagamento. Envie a mensagem pronta para a loja já começar a preparar o seu pedido."
                   : "Seu pedido já está com a gente. Envie a mensagem pronta para a loja confirmar a entrega e o pagamento."}
               </p>
               <div className="codigo">{pedido.codigo}</div>
@@ -108,7 +112,7 @@ export default async function PedidoPage({ params, searchParams }: { params: Pro
             <>
               <div className="linha-sub" style={{ marginTop: 14 }}>
                 <span>{pedido.tipoEntrega === "entrega" ? "Entrega" : "Retirada na loja"}</span>
-                <span>{cobranca.taxaEntrega ? brl(cobranca.taxaEntrega) : "grátis"}</span>
+                <span>{cobranca.taxaEntrega ? brl(cobranca.taxaEntrega) : pedido.tipoEntrega === "entrega" ? "a combinar no WhatsApp" : "sem taxa"}</span>
               </div>
               <div className="linha-total">
                 <span>{paga ? "Total pago" : "Total"}</span>

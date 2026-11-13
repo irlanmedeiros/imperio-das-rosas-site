@@ -18,11 +18,11 @@ export default async function CheckoutPage() {
           <h1 className="titulo">Finalizar pedido</h1>
           <p className="subtitulo">
             {pagarNoSite
-              ? "Preencha os dados, pague com Pix ou cartão e envie o pedido pronto pelo WhatsApp."
+              ? "Preencha os dados, pague os produtos com Pix ou cartão e envie o pedido pronto pelo WhatsApp. Se for entrega, a taxa é combinada por lá."
               : "Preencha os dados e envie o pedido pronto pelo WhatsApp. A loja confirma o valor da entrega e o pagamento por lá."}
           </p>
         </div>
-        <FormCheckout infoEntrega={loja.infoEntrega} pagarNoSite={pagarNoSite} taxas={loja.taxasEntrega} taxaOutros={loja.taxaOutrosBairros} />
+        <FormCheckout infoEntrega={loja.infoEntrega} pagarNoSite={pagarNoSite} />
       </div>
     </section>
   );
