@@ -15,9 +15,10 @@ export async function buscarUsuario(email: string) {
 
 /** Garante sessão válida em páginas e Server Actions do painel e devolve quem está logado. */
 export async function exigirAdmin(): Promise<UsuarioSessao> {
+  // cookies() primeiro: deixa a página dinâmica (o build da Cloudflare não tem banco)
+  const store = await cookies();
   // todo o painel passa por aqui: tabelas/colunas novas já existem antes de qualquer consulta
   await garantirEsquema();
-  const store = await cookies();
   const token = await validarToken(store.get(COOKIE_SESSAO)?.value);
   const sessao = token && (await resolverSessao(token.email, process.env.ADMIN_EMAIL, buscarUsuario));
   if (!sessao) redirect("/admin/login");
