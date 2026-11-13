@@ -1322,6 +1322,31 @@
   border-top: 1px solid var(--line);
   background: var(--white);
 }
+/* checkout: Pix ou cartão */
+.forma-pagamento {
+  margin: 4px 0 16px;
+}
+.forma-titulo {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--forest);
+  margin-bottom: 8px;
+}
+.forma-pagamento .opcoes {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  margin-bottom: 0;
+}
+.forma-pagamento .opcao {
+  padding: 12px;
+  gap: 8px;
+}
+@media (max-width: 420px) {
+  .forma-pagamento .opcao > svg {
+    display: none;
+  }
+}
 .linha-sub {
   display: flex;
   justify-content: space-between;
@@ -1889,3 +1914,132 @@
   color: #3f7a34;
   font-weight: 600;
 }
+
+/* página do pedido: Pix (principal) e cartão */
+.pagar-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+/* janela do Pix (no estilo do site) */
+.pix-dialogo {
+  width: min(100vw - 24px, 420px);
+  max-height: calc(100dvh - 24px);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  background: var(--cream, #f7f4ec);
+  color: var(--ink, #1f2a22);
+  box-shadow: 0 30px 80px rgba(12, 18, 14, 0.35);
+  overflow: auto;
+}
+.pix-dialogo::backdrop {
+  background: rgba(12, 18, 14, 0.6);
+  backdrop-filter: blur(3px);
+}
+.pix-dialogo[open] {
+  animation: pix-entra 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes pix-entra {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+.pix-caixa {
+  position: relative;
+  padding: 28px 24px 24px;
+  text-align: center;
+}
+.pix-caixa h2 {
+  font-family: var(--font-title), serif;
+  font-weight: 500;
+  font-size: 30px;
+  color: var(--forest);
+  margin: 6px 0 14px;
+}
+.pix-fechar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--forest);
+  cursor: pointer;
+}
+.pix-valor {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 14px;
+  color: var(--muted);
+}
+.pix-valor strong {
+  font-family: var(--font-title), serif;
+  font-size: 28px;
+  color: var(--forest);
+}
+.pix-qr {
+  display: block;
+  width: min(220px, 62vw);
+  height: auto;
+  margin: 0 auto 14px;
+  padding: 10px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+.pix-passos {
+  text-align: left;
+  margin: 0 auto 14px;
+  padding-left: 20px;
+  max-width: 300px;
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.pix-codigo {
+  width: 100%;
+  resize: none;
+  font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--forest);
+  background: var(--white);
+  border: 1px dashed #cfc6af;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  word-break: break-all;
+}
+.pix-status {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.pix-carregando {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 30px 0 10px;
+  color: var(--muted);
+}
+.pix-cpf {
+  text-align: left;
+  display: grid;
+  gap: 12px;
+}
+

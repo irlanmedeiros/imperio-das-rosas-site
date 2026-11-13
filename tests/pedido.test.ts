@@ -85,3 +85,23 @@ describe("hojeRecife", () => {
     expect(hojeRecife(new Date("2026-10-27T03:00:00Z"))).toBe("2026-10-27");
   });
 });
+
+import { cpfValido } from "@/lib/pedido";
+import { mascaraCpf } from "@/lib/format";
+
+describe("CPF (Pix no site)", () => {
+  it("aceita CPF válido com ou sem pontuação", () => {
+    expect(cpfValido("529.982.247-25")).toBe(true);
+    expect(cpfValido("52998224725")).toBe(true);
+  });
+  it("recusa dígito errado, tamanho errado e números repetidos", () => {
+    expect(cpfValido("529.982.247-26")).toBe(false);
+    expect(cpfValido("1234567890")).toBe(false);
+    expect(cpfValido("111.111.111-11")).toBe(false);
+  });
+  it("máscara enquanto digita", () => {
+    expect(mascaraCpf("529")).toBe("529");
+    expect(mascaraCpf("5299822")).toBe("529.982.2");
+    expect(mascaraCpf("52998224725999")).toBe("529.982.247-25");
+  });
+});

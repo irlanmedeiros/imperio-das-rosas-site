@@ -43,5 +43,15 @@ export const DDL_CATEGORIAS = `DO $$ BEGIN
   END IF;
 END $$`;
 
+/** Pix dentro do site: tipo da cobrança e cliente do Asaas no pedido. */
+export const DDL_PIX = `DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'cobrancas' AND column_name = 'tipo') THEN
+    ALTER TABLE "cobrancas" ADD COLUMN "tipo" text DEFAULT 'link' NOT NULL;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'pedidos' AND column_name = 'asaas_cliente_id') THEN
+    ALTER TABLE "pedidos" ADD COLUMN "asaas_cliente_id" text;
+  END IF;
+END $$`;
+
 /** Tudo o que veio depois do primeiro deploy, na ordem em que deve rodar. */
-export const DDL_TUDO = [{ nome: "tabela usuarios (aba Usuários do painel)", sql: DDL_USUARIOS }, ...DDL_PAGAMENTO.map((sql, i) => ({ nome: `pagamentos Asaas (${i + 1}/${DDL_PAGAMENTO.length})`, sql })), { nome: "subcategorias (categorias.pai_id)", sql: DDL_CATEGORIAS }];
+export const DDL_TUDO = [{ nome: "tabela usuarios (aba Usuários do painel)", sql: DDL_USUARIOS }, ...DDL_PAGAMENTO.map((sql, i) => ({ nome: `pagamentos Asaas (${i + 1}/${DDL_PAGAMENTO.length})`, sql })), { nome: "subcategorias (categorias.pai_id)", sql: DDL_CATEGORIAS }, { nome: "Pix no site (cobrancas.tipo, pedidos.asaas_cliente_id)", sql: DDL_PIX }];

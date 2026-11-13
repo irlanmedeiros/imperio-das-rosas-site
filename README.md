@@ -104,7 +104,10 @@ data/                  catálogo inicial exportado do banco
 
 Dois caminhos, os dois terminam no webhook `POST /api/asaas/webhook` (cobrança **Paga**, pedido **Confirmado**):
 
-1. **No checkout (padrão)**: o cliente escolhe retirada ou entrega e clica em **Ir para o pagamento** → paga os produtos no Asaas → volta para `/pedido/<código>?pago=1`, que espera a confirmação e abre o WhatsApp com o pedido já pago (entrega: "taxa a combinar"). Se ele sair sem pagar, a página do pedido tem **Pagar** (reabre ou gera outro link). Desligue em **Configurações → Pagamento no site** para voltar ao fluxo só pelo WhatsApp.
+1. **No checkout (padrão)**: o cliente escolhe retirada ou entrega e a forma de pagamento (só os produtos; a entrega é combinada no WhatsApp):
+   - **Pix, dentro do site**: informa o CPF (o Asaas exige) → o site cria o cliente e a cobrança PIX pela API (`/customers`, `/payments`, `/payments/{id}/pixQrCode`) e abre `/pedido/<código>?pagar=pix` com uma janela própria (QR Code + copia e cola, `src/components/site/pix-dialog.tsx`). A janela confere o pagamento a cada 3 s; pago, vira "Pago!" e abre o WhatsApp. Pix de outro dia é cancelado e gerado de novo.
+   - **Cartão**: vai para a página do Asaas (link de pagamento; o Asaas não deixa abrir em iframe) e volta para `/pedido/<código>?pago=1`.
+   Se ele sair sem pagar, a página do pedido tem **Pagar com Pix** e **Pagar com cartão**. Desligue em **Configurações → Pagamento no site** para voltar ao fluxo só pelo WhatsApp.
 2. **Pelo painel**: em **Pedidos → pedido** o atendente informa a taxa e clica em **Gerar link de pagamento** → envia ao cliente pelo WhatsApp.
 
 - Código: `src/lib/asaas.ts` (API), `src/lib/pagamento.ts` (regras, testadas), `src/app/api/asaas/webhook/route.ts`, `src/app/admin/(painel)/pedidos/[id]/actions.ts`, `src/components/admin/cobranca-pedido.tsx`.

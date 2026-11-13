@@ -14,7 +14,10 @@ export function garantirEsquema() {
       to_regclass('usuarios') IS NOT NULL
       AND to_regclass('cobrancas') IS NOT NULL
       AND to_regclass('asaas_eventos') IS NOT NULL
-      AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'categorias' AND column_name = 'pai_id')
+      AND (SELECT count(*) FROM information_schema.columns WHERE table_schema = current_schema()
+        AND ((table_name = 'categorias' AND column_name = 'pai_id')
+          OR (table_name = 'cobrancas' AND column_name = 'tipo')
+          OR (table_name = 'pedidos' AND column_name = 'asaas_cliente_id'))) = 3
       AS ok`);
     const linhas = (Array.isArray(r) ? r : (r as { rows: unknown[] }).rows) as { ok: boolean }[];
     if (linhas[0]?.ok) return;

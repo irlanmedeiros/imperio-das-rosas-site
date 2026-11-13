@@ -98,6 +98,24 @@ describe.skipIf(!local)("webhook do Asaas (banco local)", async () => {
     }
   });
 
+  it("Pix gerado dentro do site é achado pelo id da cobrança (sem link)", async () => {
+    const [p] = await db
+      .insert(schema.pedidos)
+      .values({ codigo: `IR-P${sufixo.slice(-5).toUpperCase()}`, status: "pagamento", clienteNome: "Teste Pix", clienteTelefone: "(83) 99999-0000", tipoEntrega: "entrega", itens: [], total: 700 })
+      .returning({ id: schema.pedidos.id });
+    const payId = `pay_pix_${sufixo}`;
+    await db.insert(schema.cobrancas).values({ pedidoId: p.id, tipo: "pix", asaasLinkId: payId, asaasPagamentoId: payId, url: "https://www.asaas.com/i/teste", valor: 700 });
+    try {
+      expect((await enviar(evento("PAYMENT_RECEIVED", { id: payId, paymentLink: null, externalReference: `pedido:${p.id}` }))).status).toBe(200);
+      const [c] = await db.select().from(schema.cobrancas).where(eq(schema.cobrancas.asaasLinkId, payId));
+      const [depois] = await db.select().from(schema.pedidos).where(eq(schema.pedidos.id, p.id));
+      expect(c.status).toBe("pago");
+      expect(depois.status).toBe("confirmado");
+    } finally {
+      await db.delete(schema.pedidos).where(eq(schema.pedidos.id, p.id));
+    }
+  });
+
   it("corpo inválido é recusado", async () => {
     expect((await enviar({ sem: "id" })).status).toBe(400);
   });

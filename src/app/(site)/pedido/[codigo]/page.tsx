@@ -7,6 +7,8 @@ import { db, schema } from "@/db";
 import { Revelar } from "@/components/revelar";
 import { EnviarWhatsApp } from "@/components/site/enviar-whatsapp";
 import { AguardarPagamento, PagarAgora } from "@/components/site/pagamento-pedido";
+import { PagarComPix } from "@/components/site/pix-dialog";
+import { garantirEsquema } from "@/db/esquema";
 import { asaasConfigurado } from "@/lib/asaas";
 import { cobrancasDoPedido } from "@/lib/cobranca";
 import { getLoja } from "@/lib/data";
@@ -17,9 +19,10 @@ import { linkWhatsApp, mensagemPedido } from "@/lib/whatsapp";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Seu pedido", robots: { index: false } };
 
-export default async function PedidoPage({ params, searchParams }: { params: Promise<{ codigo: string }>; searchParams: Promise<{ novo?: string; pago?: string }> }) {
-  const [{ codigo }, { novo, pago: voltouDoPagamento }] = await Promise.all([params, searchParams]);
+export default async function PedidoPage({ params, searchParams }: { params: Promise<{ codigo: string }>; searchParams: Promise<{ novo?: string; pago?: string; pagar?: string }> }) {
+  const [{ codigo }, { novo, pago: voltouDoPagamento, pagar }] = await Promise.all([params, searchParams]);
   if (!/^IR-[A-Z0-9]{6}$/.test(codigo)) notFound();
+  await garantirEsquema();
   const [[pedido], loja] = await Promise.all([db.select().from(schema.pedidos).where(eq(schema.pedidos.codigo, codigo)), getLoja()]);
   if (!pedido) notFound();
 
@@ -54,7 +57,12 @@ export default async function PedidoPage({ params, searchParams }: { params: Pro
                     : "Pague com Pix ou cartão para confirmar o pedido. Depois do pagamento, você envia o pedido pronto no WhatsApp da loja."}
               </p>
               <div className="codigo">{pedido.codigo}</div>
-              {!confirmando && <PagarAgora codigo={pedido.codigo} rotulo={cobranca ? `Pagar ${brl(cobranca.valor)}` : "Pagar agora"} />}
+              {!confirmando && (
+                <div className="pagar-botoes">
+                  <PagarComPix codigo={pedido.codigo} abrirAoCarregar={pagar === "pix"} rotulo={`Pagar ${brl(cobranca?.valor ?? pedido.total)} com Pix`} />
+                  <PagarAgora codigo={pedido.codigo} rotulo="Pagar com cartão" secundario />
+                </div>
+              )}
               {confirmando && (
                 <p className="nota" style={{ marginBottom: 24 }}>
                   Já pagou e a confirmação não chegou? <PagarAgoraLink codigo={pedido.codigo} /> ou{" "}
@@ -94,7 +102,7 @@ export default async function PedidoPage({ params, searchParams }: { params: Pro
                   Pagamento confirmado{paga.forma ? ` (${rotuloForma(paga.forma)})` : ""}. Obrigado! 🌹
                 </p>
               )}
-              <EnviarWhatsApp url={url} automatico={novo === "1" || (Boolean(paga) && voltouDoPagamento === "1")} />
+              <EnviarWhatsApp url={url} automatico={novo === "1" || (Boolean(paga) && (voltouDoPagamento === "1" || pagar === "pix"))} />
             </>
           )}
         </Revelar>

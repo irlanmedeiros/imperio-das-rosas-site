@@ -83,3 +83,13 @@ describe("auxiliares", () => {
     expect(m).toContain("https://www.asaas.com/c/1");
   });
 });
+
+import { corpoPagamentoPix } from "@/lib/pagamento";
+
+describe("corpoPagamentoPix", () => {
+  it("cobrança PIX do pedido, vencendo hoje, com a referência do pedido", () => {
+    const c = corpoPagamentoPix({ id: 9, codigo: "IR-ABC234", clienteNome: "Maria", total: 7990, itens: [{ qtd: 1, nome: "4 rosas" }] }, "cus_1", 0, "2026-11-13");
+    expect(c).toMatchObject({ customer: "cus_1", billingType: "PIX", value: 79.9, dueDate: "2026-11-13", externalReference: "pedido:9" });
+    expect(c.description).toContain("IR-ABC234");
+  });
+});

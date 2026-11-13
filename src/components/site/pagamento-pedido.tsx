@@ -6,17 +6,17 @@ import { useEffect, useState, useTransition } from "react";
 import { pagarPedido } from "@/app/(site)/checkout/actions";
 
 /** Abre a página de pagamento do Asaas (gera um link novo se o anterior venceu). */
-export function PagarAgora({ codigo, rotulo }: { codigo: string; rotulo: string }) {
+export function PagarAgora({ codigo, rotulo, secundario = false }: { codigo: string; rotulo: string; secundario?: boolean }) {
   const [pendente, iniciar] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
   const [indo, setIndo] = useState(false);
 
   return (
-    <div style={{ marginBottom: 28 }}>
+    <div>
       <button
         type="button"
-        className="btn btn-primary"
-        style={{ minHeight: 56, padding: "0 34px", fontSize: 14 }}
+        className={secundario ? "btn btn-outline" : "btn btn-primary"}
+        style={secundario ? undefined : { minHeight: 56, padding: "0 34px", fontSize: 14 }}
         disabled={pendente || indo}
         onClick={() =>
           iniciar(async () => {

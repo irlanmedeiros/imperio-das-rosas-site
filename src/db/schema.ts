@@ -60,6 +60,8 @@ export const pedidos = pgTable("pedidos", {
   observacoes: text("observacoes"),
   itens: jsonb("itens").$type<ItemPedido[]>().notNull(),
   total: integer("total").notNull(),
+  /** Cliente no Asaas (criado com o CPF no checkout, para gerar o Pix dentro do site) */
+  asaasClienteId: text("asaas_cliente_id"),
   criadoEm: timestamp("criado_em", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index("pedidos_status_idx").on(t.status), index("pedidos_criado_em_idx").on(t.criadoEm)]);
 
@@ -78,6 +80,9 @@ export const usuarios = pgTable("usuarios", {
 export const cobrancas = pgTable("cobrancas", {
   id: serial("id").primaryKey(),
   pedidoId: integer("pedido_id").notNull().references(() => pedidos.id, { onDelete: "cascade" }),
+  /** "link" = link de pagamento (página do Asaas, cartão); "pix" = cobrança Pix mostrada dentro do site */
+  tipo: text("tipo").$type<"link" | "pix">().notNull().default("link"),
+  /** Id do link (lnk_…) ou, no Pix, o id da cobrança (pay_…) */
   asaasLinkId: text("asaas_link_id").notNull().unique(),
   url: text("url").notNull(),
   /** Produtos + taxa de entrega, em centavos */

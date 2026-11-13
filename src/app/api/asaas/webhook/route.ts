@@ -34,10 +34,10 @@ export async function POST(request: Request) {
 
     const novo = statusPorEvento(event);
     if (novo && payment) {
-      // cobrança pelo link que originou o pagamento; sem link, pela referência "pedido:N" (última cobrança do pedido)
-      let [cobranca] = payment.paymentLink
-        ? await db.select().from(schema.cobrancas).where(eq(schema.cobrancas.asaasLinkId, payment.paymentLink))
-        : [];
+      // cobrança pelo link que originou o pagamento; Pix do site, pelo id da cobrança (pay_…);
+      // sem nenhum dos dois, pela referência "pedido:N" (última cobrança do pedido)
+      const chave = payment.paymentLink ?? payment.id;
+      let [cobranca] = chave ? await db.select().from(schema.cobrancas).where(eq(schema.cobrancas.asaasLinkId, chave)) : [];
       const pedidoRef = pedidoDaReferencia(payment.externalReference);
       if (!cobranca && pedidoRef) {
         [cobranca] = await db.select().from(schema.cobrancas).where(eq(schema.cobrancas.pedidoId, pedidoRef)).orderBy(desc(schema.cobrancas.criadoEm)).limit(1);

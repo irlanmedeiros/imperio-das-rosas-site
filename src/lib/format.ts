@@ -45,3 +45,9 @@ export function dataBR(iso: string | null | undefined) {
   const [a, m, d] = iso.split("-");
   return d && m && a ? `${d}/${m}/${a}` : iso;
 }
+
+/** 12345678909 → 123.456.789-09 (enquanto digita) */
+export function mascaraCpf(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  return d.replace(/^(\d{3})(\d)/, "$1.$2").replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d{1,2})$/, ".$1-$2");
+}

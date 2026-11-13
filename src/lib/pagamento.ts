@@ -83,6 +83,19 @@ export function corpoLinkPagamento(p: PedidoParaLink, taxaEntrega: number, urlSi
   };
 }
 
+/** Corpo do POST /v3/payments para o Pix mostrado dentro do site (produtos + taxa, vence hoje). */
+export function corpoPagamentoPix(p: PedidoParaLink, clienteId: string, taxaEntrega: number, hoje: string) {
+  const itens = p.itens.map((i) => `${i.qtd}x ${i.nome}`).join(", ");
+  return {
+    customer: clienteId,
+    billingType: "PIX",
+    value: Math.round(p.total + taxaEntrega) / 100,
+    dueDate: hoje,
+    description: `Pedido ${p.codigo} — Império das Rosas: ${itens}`.slice(0, 500),
+    externalReference: `pedido:${p.id}`,
+  };
+}
+
 /** "pedido:123" → 123 */
 export function pedidoDaReferencia(ref: string | null | undefined): number | null {
   const m = /^pedido:(\d+)$/.exec(ref ?? "");

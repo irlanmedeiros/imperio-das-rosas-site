@@ -1,13 +1,13 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, CreditCard, LoaderCircle, ShoppingBag, Store, Truck } from "lucide-react";
+import { ArrowRight, CreditCard, LoaderCircle, QrCode, ShoppingBag, Store, Truck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { criarPedido, type EntradaPedido } from "@/app/(site)/checkout/actions";
 import { useCarrinho, useHidratado } from "@/components/carrinho";
-import { brl } from "@/lib/format";
+import { brl, mascaraCpf } from "@/lib/format";
 import { LinhaItem } from "./gaveta-carrinho";
 
 const PERIODOS = ["Manhã (8h às 12h)", "Tarde (12h às 18h)"];
@@ -63,15 +63,18 @@ function Formulario({ infoEntrega, pagarNoSite }: Props) {
       destinatario: "",
       mensagemCartao: "",
       observacoes: "",
+      cpf: "",
+      forma: "pix" as "pix" | "cartao",
       site: "",
     };
   });
   const minData = useMemo(() => hoje(), []);
   const pagarAgora = pagarNoSite;
+  const comPix = pagarAgora && f.forma === "pix";
   const entrega = f.tipoEntrega === "entrega";
 
   const set = (campo: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const v = campo === "clienteTelefone" ? mascaraTelefone(e.target.value) : e.target.value;
+    const v = campo === "clienteTelefone" ? mascaraTelefone(e.target.value) : campo === "cpf" ? mascaraCpf(e.target.value) : e.target.value;
     setF((x) => ({ ...x, [campo]: v }));
     if (erros[campo]) setErros((er) => ({ ...er, [campo]: "" }));
   };
@@ -86,10 +89,11 @@ function Formulario({ infoEntrega, pagarNoSite }: Props) {
         try {
           localStorage.setItem("imperio-cliente", JSON.stringify({ nome: f.clienteNome, telefone: f.clienteTelefone }));
         } catch {}
-        setSaindo(r.pagamentoUrl ? "pagamento" : "pedido");
+        setSaindo(r.pagamentoUrl || r.pix ? "pagamento" : "pedido");
         limpar();
         // paga no Asaas; ao terminar, o Asaas devolve o cliente para /pedido/<código>?pago=1
-        if (r.pagamentoUrl) window.location.href = r.pagamentoUrl;
+        if (r.pix) router.push(`/pedido/${r.codigo}?pagar=pix`); // QR Code do Pix numa janela do próprio site
+        else if (r.pagamentoUrl) window.location.href = r.pagamentoUrl;
         else router.push(`/pedido/${r.codigo}?novo=1`);
       } else {
         setErros(r.erros);
@@ -104,7 +108,7 @@ function Formulario({ infoEntrega, pagarNoSite }: Props) {
     return (
       <div className="gaveta-vazia" role="status">
         <LoaderCircle style={{ animation: "girar 1s linear infinite" }} />
-        <p>{saindo === "pagamento" ? "Abrindo o pagamento seguro…" : "Pedido registrado! Abrindo…"}</p>
+        <p>{saindo === "pagamento" ? (comPix ? "Gerando o seu Pix…" : "Abrindo o pagamento seguro…") : "Pedido registrado! Abrindo…"}</p>
       </div>
     );
   }
@@ -234,6 +238,36 @@ function Formulario({ infoEntrega, pagarNoSite }: Props) {
               : "+ taxa de entrega, confirmada no WhatsApp."
             : "Retirada na loja, sem taxa."}
         </p>
+        {pagarAgora && (
+          <div className="forma-pagamento">
+            <span className="forma-titulo">Como você quer pagar?</span>
+            <div className="opcoes" role="radiogroup" aria-label="Forma de pagamento">
+              <label className="opcao">
+                <input type="radio" name="forma" checked={f.forma === "pix"} onChange={() => setF((x) => ({ ...x, forma: "pix" }))} />
+                <QrCode size={20} color="var(--forest)" />
+                <span>
+                  <strong>Pix</strong>
+                  <small>Aqui mesmo, na hora</small>
+                </span>
+              </label>
+              <label className="opcao">
+                <input type="radio" name="forma" checked={f.forma === "cartao"} onChange={() => setF((x) => ({ ...x, forma: "cartao" }))} />
+                <CreditCard size={20} color="var(--forest)" />
+                <span>
+                  <strong>Cartão</strong>
+                  <small>Página segura do Asaas</small>
+                </span>
+              </label>
+            </div>
+            {comPix && (
+              <label className="field" style={{ marginTop: 12 }}>
+                <span>CPF de quem vai pagar</span>
+                <input id="cpf" className="input" inputMode="numeric" autoComplete="off" placeholder="000.000.000-00" value={f.cpf} onChange={set("cpf")} aria-invalid={!!erros.cpf} />
+                {erros.cpf ? <span className="erro">{erros.cpf}</span> : <small>O banco pede o CPF para gerar o Pix.</small>}
+              </label>
+            )}
+          </div>
+        )}
         {mensagem && (
           <p className="erro" role="alert" style={{ marginBottom: 12 }}>
             {mensagem}
@@ -242,11 +276,15 @@ function Formulario({ infoEntrega, pagarNoSite }: Props) {
         <button className="btn btn-primary btn-block" type="submit" disabled={pendente}>
           {pendente ? (
             <>
-              <LoaderCircle className="girando" style={{ animation: "girar 1s linear infinite" }} /> {pagarAgora ? "Abrindo o pagamento…" : "Registrando…"}
+              <LoaderCircle className="girando" style={{ animation: "girar 1s linear infinite" }} /> {comPix ? "Gerando o Pix…" : pagarAgora ? "Abrindo o pagamento…" : "Registrando…"}
+            </>
+          ) : comPix ? (
+            <>
+              <QrCode /> Pagar com Pix
             </>
           ) : pagarAgora ? (
             <>
-              <CreditCard /> Ir para o pagamento
+              <CreditCard /> Pagar com cartão
             </>
           ) : (
             <>
@@ -256,7 +294,9 @@ function Formulario({ infoEntrega, pagarNoSite }: Props) {
         </button>
         <p className="nota" style={{ marginTop: 12, marginBottom: 0, textAlign: "center" }}>
           {pagarAgora
-            ? "Pague com Pix ou cartão no ambiente seguro do Asaas. Depois do pagamento, o pedido vai pronto para o WhatsApp da loja."
+            ? comPix
+              ? "O QR Code e o Pix copia e cola aparecem aqui no site. Depois do pagamento, o pedido vai pronto para o WhatsApp da loja."
+              : "Você paga na página segura do Asaas e volta para o site. Depois do pagamento, o pedido vai pronto para o WhatsApp da loja."
             : "O pagamento é combinado direto com a loja pelo WhatsApp."}
         </p>
       </motion.aside>

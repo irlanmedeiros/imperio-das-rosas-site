@@ -16,6 +16,10 @@ export const entradaPedidoSchema = z
     destinatario: z.string().trim().max(80).optional(),
     mensagemCartao: z.string().trim().max(300).optional(),
     observacoes: z.string().trim().max(400).optional(),
+    /** CPF de quem paga: o Asaas exige para gerar o Pix dentro do site */
+    cpf: z.string().max(20).optional(),
+    /** Como pagar no site: Pix aqui mesmo ou cartão na página do Asaas */
+    forma: z.enum(["pix", "cartao"]).optional(),
     site: z.string().max(0).optional(), // honeypot anti-spam
   })
   .refine((d) => d.tipoEntrega === "retirada" || (d.endereco && d.endereco.length >= 5), {
@@ -25,6 +29,19 @@ export const entradaPedidoSchema = z
   .refine((d) => d.tipoEntrega === "retirada" || (d.bairro && d.bairro.length >= 2), { path: ["bairro"], message: "Informe o bairro" });
 
 export type EntradaPedido = z.input<typeof entradaPedidoSchema>;
+
+/** CPF válido (dígitos verificadores). Aceita com ou sem pontuação. */
+export function cpfValido(cpf: string) {
+  const d = cpf.replace(/\D/g, "");
+  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+  const digito = (n: number) => {
+    let soma = 0;
+    for (let i = 0; i < n; i++) soma += Number(d[i]) * (n + 1 - i);
+    const r = (soma * 10) % 11;
+    return r === 10 ? 0 : r;
+  };
+  return digito(9) === Number(d[9]) && digito(10) === Number(d[10]);
+}
 
 /** Primeira mensagem de erro de cada campo (para mostrar embaixo do campo). */
 export function errosPorCampo(issues: { path: PropertyKey[]; message: string }[]) {
